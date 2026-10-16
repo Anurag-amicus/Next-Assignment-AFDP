@@ -1,0 +1,55 @@
+import Link from "next/link";
+import Button from "@/components/common/Button";
+import { apiService } from "@/services/apiService";
+import type { CategoryItem } from "@/types/product";
+
+const DEFAULT_CATEGORIES: CategoryItem[] = [
+    { categoryId: 1, name: "Electronics" },
+    { categoryId: 2, name: "Clothing" },
+    { categoryId: 3, name: "Books" },
+    { categoryId: 4, name: "Home" },
+    { categoryId: 5, name: "Sports" },
+    { categoryId: 6, name: "Everyday Use" },
+    { categoryId: 7, name: "Toys" },
+    { categoryId: 8, name: "Accessories" },
+];
+
+export default async function CategoryGrid() {
+    let categories: CategoryItem[] = DEFAULT_CATEGORIES;
+
+    try {
+        const res = await apiService.getCategories({ cache: "no-store" });
+        if (res.success && res.data && res.data.length > 0) {
+            categories = res.data;
+        }
+    } catch {
+        categories = DEFAULT_CATEGORIES;
+    }
+
+    return (
+        <section className="w-full bg-white px-6 py-7.5 max-[520px]:px-4.5 max-[520px]:pt-10 max-[520px]:pb-13.75">
+            <div className="mx-auto w-full max-w-287.5 max-[900px]:max-w-175 max-[520px]:max-w-full">
+                <h2 className="m-0 mb-7 text-black font-display text-3xl font-extrabold leading-tight tracking-tight text-center max-[768px]:text-2xl max-[480px]:text-xl">
+                    Shop by Category
+                </h2>
+
+                <div className="grid grid-cols-4 gap-x-6.5 gap-y-3 max-[900px]:grid-cols-2 max-[900px]:gap-x-4.5 max-[520px]:grid-cols-1 max-[520px]:gap-2.5">
+                    {categories.map((category) => (
+                        <Link
+                            key={category.categoryId}
+                            href={`/products?categoryId=${category.categoryId}`}
+                            className="block w-full"
+                        >
+                            <Button
+                                variant="outline"
+                                className="w-full h-13 px-4 py-2.5 border-2 border-charcoal rounded-md bg-white text-orange font-display text-sm font-bold tracking-wide whitespace-nowrap hover:bg-orange hover:border-orange hover:text-white max-[520px]:h-12 max-[520px]:text-xs"
+                            >
+                                {category.name}
+                            </Button>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
