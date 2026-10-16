@@ -1,0 +1,74 @@
+export interface Product {
+    id: number;
+    name: string;
+    category: string;
+    price: number;
+    imageUrl: string;
+    rating: number;
+    description?: string;
+    brandName?: string;
+}
+
+export interface BrandItem {
+    brandId: number;
+    name: string;
+}
+
+export type BrandResponse = BrandItem[];
+
+export interface CategoryItem {
+    categoryId: number;
+    name: string;
+}
+
+export type CategoryResponse = CategoryItem[];
+
+export interface ProductQueryParams {
+    Search?: string;
+    CategoryId?: number;
+    BrandId?: number;
+    MinPrice?: number;
+    MaxPrice?: number;
+    MinRating?: number;
+    SortBy?: string;
+    SortOrder?: "asc" | "desc";
+    Page?: number;
+    PageSize?: number;
+}
+
+export interface ProductResponse {
+    productId: number;
+    name: string;
+    description: string;
+    categoryId: number;
+    categoryName: string;
+    brandId: number;
+    brandName: string;
+    price: number;
+    rating: number;
+}
+
+export interface QuantitySelectorProps {
+    quantity: number;
+    onChange: (value: number) => void;
+    className?: string;
+    disabled?: boolean;
+}
+
+export interface ProductCardProps extends Product {
+    onAddToCart?: (product: Product, quantity: number) => void;
+}
+
+export interface FeaturedCarouselProps {
+    onAddToCart?: (product: Product, quantity: number) => void;
+}
+
+export interface ProductListingPageProps {
+    onAddToCart?: (product: Product, quantity: number) => void;
+    cartCount?: number;
+}
+
+export interface HomePageProps {
+    onAddToCart?: (product: Product, quantity: number) => void;
+    cartCount?: number;
+}
