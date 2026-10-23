@@ -35,7 +35,7 @@ export default function Header({ cartCount = 0 }: HeaderProps) {
 
     const isActive = (href: string) => {
         if (href === "/") return pathname === "/";
-        return pathname.startsWith(href);
+        return pathname === href || pathname.startsWith(`${href}/`);
     };
 
     const navLinkClass = ({ isActive }: { isActive: boolean }) =>

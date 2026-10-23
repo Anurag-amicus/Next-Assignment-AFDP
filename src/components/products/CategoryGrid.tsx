@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Button from "@/components/common/Button";
 import { apiService } from "@/services/apiService";
 import type { CategoryItem } from "@/types/product";
 
@@ -38,14 +37,9 @@ export default async function CategoryGrid() {
                         <Link
                             key={category.categoryId}
                             href={`/products?categoryId=${category.categoryId}`}
-                            className="block w-full"
+                            className="flex items-center justify-center w-full h-13 px-4 py-2.5 border-2 border-charcoal rounded-md bg-white text-orange font-display text-sm font-bold tracking-wide whitespace-nowrap hover:bg-orange hover:border-orange hover:text-white transition-colors max-[520px]:h-12 max-[520px]:text-xs no-underline"
                         >
-                            <Button
-                                variant="outline"
-                                className="w-full h-13 px-4 py-2.5 border-2 border-charcoal rounded-md bg-white text-orange font-display text-sm font-bold tracking-wide whitespace-nowrap hover:bg-orange hover:border-orange hover:text-white max-[520px]:h-12 max-[520px]:text-xs"
-                            >
-                                {category.name}
-                            </Button>
+                            {category.name}
                         </Link>
                     ))}
                 </div>

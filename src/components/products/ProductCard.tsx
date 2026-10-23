@@ -43,7 +43,7 @@ const ProductCard = memo(function ProductCard({
         >
             <div className="relative w-full h-55 p-5 flex items-center justify-center bg-white max-[768px]:h-52.5 max-[480px]:h-57.5">
                 <Link
-                    href={`/products`}
+                    href={`/products/${id}`}
                     className="flex w-full h-full items-center justify-center"
                     aria-label={`View details for ${name}`}
                 >
@@ -61,7 +61,7 @@ const ProductCard = memo(function ProductCard({
             <div className="flex-1 pt-4.5 px-5 pb-5.5 flex flex-col items-center text-center">
                 <div className="w-full">
                     <Link
-                        href={`/products`}
+                        href={`/products/${id}`}
                         className="no-underline block group"
                     >
                         <h2 className="w-full m-0 mb-1.75 text-orange font-display text-base font-bold leading-[1.35] tracking-[0.4px] uppercase line-clamp-2 overflow-hidden group-hover:underline">
