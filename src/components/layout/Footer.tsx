@@ -46,7 +46,7 @@ function Footer() {
                                 HELP CENTER
                             </h3>
                             <p className="m-0 text-border-dark text-xs leading-normal">
-                                We're here when you need us
+                                We are here when you need us
                             </p>
                         </div>
                     </div>
@@ -128,18 +128,18 @@ function Footer() {
             <div className="w-full bg-white py-0 px-6 border-t border-border max-[600px]:px-4">
                 <div className="mx-auto w-full max-w-287.5 min-h-16 py-4 grid grid-cols-3 items-center max-[900px]:grid-cols-1 max-[900px]:gap-4 max-[900px]:justify-items-center">
                     <div className="flex items-center gap-3.5 max-[900px]:justify-center">
-                        <a href="/" aria-label="Facebook" className="text-muted text-lg font-bold leading-none hover:text-orange transition-colors duration-150">
+                        <Link href="/" aria-label="Facebook" className="text-muted text-lg font-bold leading-none hover:text-orange transition-colors duration-150">
                             f
-                        </a>
-                        <a href="/" aria-label="Instagram" className="text-muted text-lg font-bold leading-none hover:text-orange transition-colors duration-150">
+                        </Link>
+                        <Link href="/" aria-label="Instagram" className="text-muted text-lg font-bold leading-none hover:text-orange transition-colors duration-150">
                             ◎
-                        </a>
-                        <a href="/" aria-label="LinkedIn" className="text-muted text-lg font-bold leading-none hover:text-orange transition-colors duration-150">
+                        </Link>
+                        <Link href="/" aria-label="LinkedIn" className="text-muted text-lg font-bold leading-none hover:text-orange transition-colors duration-150">
                             in
-                        </a>
-                        <a href="/" aria-label="X" className="text-muted text-lg font-bold leading-none hover:text-orange transition-colors duration-150">
+                        </Link>
+                        <Link href="/" aria-label="X" className="text-muted text-lg font-bold leading-none hover:text-orange transition-colors duration-150">
                             X
-                        </a>
+                        </Link>
                     </div>
 
                     <div className="flex items-center justify-center gap-2 whitespace-nowrap text-xs text-muted max-[420px]:flex-wrap">

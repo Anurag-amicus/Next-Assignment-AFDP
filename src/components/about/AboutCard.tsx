@@ -53,7 +53,7 @@ export default function AboutCard({
                 <div className="mt-6 pt-2">
                     <Link
                         href={linkHref}
-                        className="inline-flex items-center text-xs font-bold uppercase tracking-wider text-orange hover:text-orange-dark hover:underline transition-colors"
+                        className="inline-flex items-center text-xs font-display uppercase tracking-wider text-orange hover:text-orange-dark hover:underline transition-colors"
                     >
                         {linkText}
                     </Link>

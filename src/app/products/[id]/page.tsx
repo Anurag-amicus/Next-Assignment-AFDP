@@ -1,8 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import Button from "@/components/common/Button";
 import AddToCartSection from "@/components/products/AddToCartSection";
-import { apiService } from "@/services/apiService";
+import { productApiService } from "@/services/productApiServices";
 import { transformProduct } from "@/utils/dataTransformation";
 import type { Metadata } from "next";
 
@@ -16,7 +17,7 @@ export async function generateMetadata({
     const { id } = await params;
 
     try {
-        const res = await apiService.getProductById(id, { cache: "no-store" });
+        const res = await productApiService.getProductById(id, { cache: "no-store" });
         if (res.success && res.data) {
             const product = transformProduct(res.data);
             return {
@@ -45,7 +46,7 @@ export default async function ProductDetailPage({
     let error: string | null = null;
 
     try {
-        const res = await apiService.getProductById(id, { cache: "no-store" });
+        const res = await productApiService.getProductById(id, { cache: "no-store" });
         if (res.success && res.data) {
             product = transformProduct(res.data);
         } else {
@@ -117,9 +118,12 @@ export default async function ProductDetailPage({
                 <div className="grid grid-cols-12 gap-8 max-[900px]:grid-cols-1 items-start">
                     {/* Left: Product Image Card */}
                     <div className="col-span-5 max-[900px]:col-span-1 bg-white border border-border rounded-xs p-6 flex items-center justify-center min-h-90 shadow-xs">
-                        <img
+                        <Image
                             src={product.imageUrl || "/product-placeholder.svg"}
                             alt={product.name}
+                            width={320}
+                            height={320}
+                            unoptimized
                             className="max-h-80 max-w-full object-contain transition-transform duration-300 hover:scale-105"
                         />
                     </div>

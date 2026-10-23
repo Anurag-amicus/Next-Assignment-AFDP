@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import ProductCard from "@/components/products/ProductCard";
 import Pagination from "@/components/common/Pagination";
-import { apiService } from "@/services/apiService";
+import { productApiService } from "@/services/productApiServices";
 import { transformProducts } from "@/utils/dataTransformation";
 import type { ProductQueryParams, Product } from "@/types/product";
 
@@ -64,7 +64,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     let error: string | null = null;
 
     try {
-        const response = await apiService.getProducts(queryParams, { cache: "no-store" });
+        const response = await productApiService.getProducts(queryParams, { cache: "no-store" });
         if (response.success && response.data) {
             products = transformProducts(response.data.products);
             totalRecords = response.data.totalRecords;

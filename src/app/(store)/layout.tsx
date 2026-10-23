@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import RefreshButton from "@/components/products/RefreshButton";
 import Sidebar from "@/components/layout/Sidebar";
-import { apiService } from "@/services/apiService";
+import { productApiService } from "@/services/productApiServices";
 import type { CategoryItem, BrandItem } from "@/types/product";
 
 export default async function StoreLayout({
@@ -15,13 +15,13 @@ export default async function StoreLayout({
 
     try {
         const [catRes, brandRes] = await Promise.all([
-            apiService.getCategories({ cache: "no-store" }),
-            apiService.getBrands({ cache: "no-store" }),
+            productApiService.getCategories({ cache: "no-store" }),
+            productApiService.getBrands({ cache: "no-store" }),
         ]);
         if (catRes.success && catRes.data) categories = catRes.data;
         if (brandRes.success && brandRes.data) brands = brandRes.data;
-    } catch {
-        // Fallback
+    } catch (error) {
+        console.error(error);
     }
 
     return (

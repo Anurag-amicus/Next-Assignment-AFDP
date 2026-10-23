@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { apiService } from "@/services/apiService";
+import { productApiService } from "@/services/productApiServices";
 import type { CategoryItem } from "@/types/product";
 
 const DEFAULT_CATEGORIES: CategoryItem[] = [
@@ -17,7 +17,7 @@ export default async function CategoryGrid() {
     let categories: CategoryItem[] = DEFAULT_CATEGORIES;
 
     try {
-        const res = await apiService.getCategories({ cache: "no-store" });
+        const res = await productApiService.getCategories({ cache: "no-store" });
         if (res.success && res.data && res.data.length > 0) {
             categories = res.data;
         }

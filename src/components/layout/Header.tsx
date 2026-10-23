@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faMagnifyingGlass,
@@ -11,25 +11,72 @@ import {
     faRightToBracket,
     faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export interface HeaderProps {
     cartCount?: number;
 }
 
-export default function Header({ cartCount = 0 }: HeaderProps) {
+export default function Header({ cartCount = 3 }: HeaderProps) {
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
 
-    const [searchValue, setSearchValue] = useState("");
+    const currentSearch = searchParams.get("search") || "";
+    const [searchValue, setSearchValue] = useState(currentSearch);
+    const [prevSearchParam, setPrevSearchParam] = useState(currentSearch);
+    const [prevPathname, setPrevPathname] = useState(pathname);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // React 19 pattern: adjust state during render when external URL search param or route changes
+    if (pathname !== prevPathname || (pathname === "/products" && prevSearchParam !== currentSearch)) {
+        setPrevPathname(pathname);
+        setPrevSearchParam(currentSearch);
+        if (pathname === "/products") {
+            setSearchValue(currentSearch);
+        }
+    }
+
+    const debouncedSearch = useDebounce(searchValue, 300);
+
+    // Apply debounced search navigation ONLY when currently on /products
+    useEffect(() => {
+        if (pathname === "/products") {
+            const trimmed = debouncedSearch.trim();
+            if (trimmed !== currentSearch) {
+                const params = new URLSearchParams(searchParams.toString());
+                if (trimmed) {
+                    params.set("search", trimmed);
+                } else {
+                    params.delete("search");
+                }
+                params.delete("page"); // Reset pagination on search change
+                const query = params.toString();
+                router.push(`/products${query ? `?${query}` : ""}`);
+            }
+        }
+    }, [debouncedSearch, pathname, currentSearch, router, searchParams]);
 
     const handleSearchSubmit = (event: React.FormEvent) => {
         event.preventDefault();
         const trimmed = searchValue.trim();
-        if (trimmed) {
-            router.push(`/products?search=${encodeURIComponent(trimmed)}`);
+        if (pathname === "/products") {
+            const params = new URLSearchParams(searchParams.toString());
+            if (trimmed) {
+                params.set("search", trimmed);
+            } else {
+                params.delete("search");
+            }
+            params.delete("page");
+            const query = params.toString();
+            router.push(`/products${query ? `?${query}` : ""}`);
         } else {
-            router.push("/products");
+            // When on other pages, submit navigates to /products?search=...
+            if (trimmed) {
+                router.push(`/products?search=${encodeURIComponent(trimmed)}`);
+            } else {
+                router.push("/products");
+            }
         }
     };
 
@@ -39,10 +86,9 @@ export default function Header({ cartCount = 0 }: HeaderProps) {
     };
 
     const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-        `flex items-center whitespace-nowrap text-sm font-semibold leading-none no-underline transition-all duration-200 ${
-            isActive
-                ? "text-orange font-bold relative after:absolute after:-bottom-1.5 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
-                : "text-muted hover:text-orange"
+        `flex items-center whitespace-nowrap text-sm font-semibold leading-none no-underline transition-all duration-200 ${isActive
+            ? "text-orange font-bold relative after:absolute after:-bottom-1.5 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
+            : "text-muted hover:text-orange"
         }`;
 
     return (
@@ -205,40 +251,37 @@ export default function Header({ cartCount = 0 }: HeaderProps) {
                             <Link
                                 href="/"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${
-                                    isActive("/")
-                                        ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
-                                        : "text-charcoal hover:text-orange"
-                                }`}
+                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${isActive("/")
+                                    ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
+                                    : "text-charcoal hover:text-orange"
+                                    }`}
                             >
                                 Home
                             </Link>
                             <Link
                                 href="/products"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${
-                                    isActive("/products")
-                                        ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
-                                        : "text-charcoal hover:text-orange"
-                                }`}
+                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${isActive("/products")
+                                    ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
+                                    : "text-charcoal hover:text-orange"
+                                    }`}
                             >
                                 Products
                             </Link>
                             <Link
                                 href="/about"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${
-                                    isActive("/about")
-                                        ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
-                                        : "text-charcoal hover:text-orange"
-                                }`}
+                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${isActive("/about")
+                                    ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
+                                    : "text-charcoal hover:text-orange"
+                                    }`}
                             >
                                 About
                             </Link>
                             <Link
                                 href="/login"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className="text-base font-semibold text-charcoal hover:text-orange py-2 flex items-center gap-2"
+                                className="text-base font-semibold text-charcoal hover:text-orange py-1 flex items-center gap-1"
                             >
                                 <FontAwesomeIcon icon={faRightToBracket} />
                                 Sign In
@@ -252,7 +295,8 @@ export default function Header({ cartCount = 0 }: HeaderProps) {
                                     <FontAwesomeIcon icon={faCartShopping} />
                                     Cart
                                 </span>
-                                {cartCount > 0 && (
+
+                                {cartCount >= 0 && (
                                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange px-1.5 text-xs font-bold text-white leading-none">
                                         {cartCount}
                                     </span>

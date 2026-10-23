@@ -4,6 +4,7 @@ export interface Product {
     category: string;
     price: number;
     imageUrl: string;
+    image?: string;
     rating: number;
     description?: string;
     brandName?: string;
@@ -46,6 +47,24 @@ export interface ProductResponse {
     brandName: string;
     price: number;
     rating: number;
+}
+
+export interface ProductCreateInput {
+    name: string;
+    description?: string;
+    categoryId: number;
+    brandId?: number;
+    price: number;
+    rating?: number;
+}
+
+export interface ProductUpdateInput {
+    name?: string;
+    description?: string;
+    categoryId?: number;
+    brandId?: number;
+    price?: number;
+    rating?: number;
 }
 
 export interface QuantitySelectorProps {

@@ -143,7 +143,7 @@ export default function Sidebar({ categories, brands }: SidebarProps) {
                     <SortFilter
                         selectedSort={sortByParam}
                         selectedDirection={sortOrderParam}
-                        onSortChange={(sort) => updateFilters({ sortBy: sort })}
+                        onSortChange={(sort) => updateFilters({ sortBy: sort, sortOrder: sortOrderParam || "asc" })}
                         onDirectionChange={(dir) => updateFilters({ sortOrder: dir })}
                         onClearSort={() => updateFilters({ sortBy: null, sortOrder: null })}
                     />

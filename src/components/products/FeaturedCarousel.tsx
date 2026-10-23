@@ -11,7 +11,7 @@ import Arrow from "@/components/common/Arrow";
 import ProductCard from "@/components/products/ProductCard";
 import type { FeaturedCarouselProps, Product } from "@/types/product";
 import productsData from "@/data/products.json";
-import { apiService } from "@/services/apiService";
+import { productApiService } from "@/services/productApiServices";
 import { transformProducts } from "@/utils/dataTransformation";
 
 function FeaturedCarousel({ onAddToCart }: FeaturedCarouselProps = {}) {
@@ -19,7 +19,7 @@ function FeaturedCarousel({ onAddToCart }: FeaturedCarouselProps = {}) {
 
     useEffect(() => {
         let isMounted = true;
-        apiService.getProducts({ Page: 1, PageSize: 8 }).then((res) => {
+        productApiService.getProducts({ Page: 1, PageSize: 8 }).then((res) => {
             if (isMounted && res.success && res.data?.products?.length) {
                 setProducts(transformProducts(res.data.products));
             }

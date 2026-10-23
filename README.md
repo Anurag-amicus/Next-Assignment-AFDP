@@ -18,9 +18,9 @@ npm install
 ### 2. Environment Variables
 Create a `.env` file in the project root:
 ```env
-API_URL=https://core-api-production.up.railway.app
-NEXT_PUBLIC_API_URL=https://core-api-production.up.railway.app
+API_URL=https://training-ecom1-a9a2cmbsefdvgwha.centralindia-01.azurewebsites.net
 ```
+> **Security Note:** `API_URL` is kept **server-only** (without `NEXT_PUBLIC_` prefix) to prevent leaking internal upstream API URLs or credentials to the browser bundle.
 
 ### 3. Running Locally
 ```bash
@@ -52,10 +52,14 @@ npm run start
 | `src/app/layout.tsx` | **Server** | Root document structure, meta tags, and font definitions. Zero client JS. |
 | `src/app/page.tsx` | **Server** | Composes static Home page sections without requiring browser state. |
 | `src/app/about/page.tsx` | **Server** | Static company info, hero, and reusable `AboutCard` grids. Fully SEO-optimized. |
+| `src/app/products/[id]/page.tsx` | **Server** | Dynamic product route; fetches data server-side; generates dynamic SEO metadata. |
+| `src/app/api/products/route.ts` | **Server (Route Handler)** | REST API proxy and transformation wrapper for product list & creation. |
+| `src/app/api/products/[id]/route.ts` | **Server (Route Handler)** | REST API proxy for individual product retrieval, update, and deletion. |
 | `src/components/layout/Footer.tsx` | **Server** | Static trust bar, site map links, and copyright notice. |
 | `src/components/products/CategoryGrid.tsx` | **Server** | Fetches categories server-side with fallback for instant, JS-free rendering. |
 | `src/components/common/Button.tsx` | **Client** | Manages browser events (`onClick`), loading states, and interactive feedback. |
 | `src/components/products/ProductCard.tsx` | **Client** | Holds interactive local item quantity state for purchasing workflows. |
+| `src/components/products/AddToCartSection.tsx` | **Client** | Isolates interactive quantity selection, Add to Cart event, and success toast. |
 | `src/components/products/FeaturedCarousel.tsx` | **Client** | Controls touch events, sliding navigation, and DOM events via Swiper. |
 | `src/components/layout/Header.tsx` | **Client** | Reads pathname for active route indicators, manages search input, and controls mobile drawer state. |
 | `src/components/layout/Sidebar.tsx` | **Client** | Interacts with Next.js navigation hooks (`useRouter`, `useSearchParams`) to update URL filters. |
@@ -81,13 +85,14 @@ npm run start
 - Build a responsive NavBar with logo, search, active route indicators, Sign In, and a cart icon with item count.
 - Ensure the NavBar, sidebar, and layouts are fully responsive.
 
-### Three Layout Groups Architecture
+### Layout Groups Architecture
 
 ```
 src/app/
 ├── layout.tsx                # [1] Root Layout: Shared Header + Children + Footer
 ├── page.tsx                  # Home Page (inside Root Layout)
 ├── about/page.tsx            # About Page (inside Root Layout)
+├── products/[id]/page.tsx    # Dynamic Product Details Page (Full width, outside store layout)
 ├── (store)/                  # [2] Store Route Group
 │   ├── layout.tsx            # 2-Column Store Layout (Breadcrumb + Title + Sidebar + Content)
 │   └── products/page.tsx     # Product Listing Page (Filtered catalog)
@@ -122,6 +127,119 @@ src/app/
 
 ---
 
+## 🧭 Assignment 3: Navigation System
+
+### Objectives
+- Implement `next/link` across all internal navigation.
+- Implement `usePathname` for dynamic active link highlighting.
+- Implement the dynamic products route (`/products/[id]`).
+- Port breadcrumb navigation so it dynamically updates per page.
+- Ensure Hero search and category cards lead to the product listing with the correct parameters.
+
+### Key Implementation Details
+
+1. **Dynamic Product Details Route (`src/app/products/[id]/page.tsx`)**:
+   - Created **outside** the `(store)` route group so the detail view does not inherit the catalog filter sidebar, while retaining the clean URL `/products/:id`.
+   - Async Server Component utilizing Next.js 16 awaited params: `const { id } = await params`.
+   - Generates dynamic SEO metadata (`generateMetadata`) reflecting the active product name and description.
+   - Server-renders product specifications, tax-inclusive pricing, brand/category badges, ratings, and guarantee perks.
+   - Renders interactive quantity controls and cart submission in [`AddToCartSection.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/products/AddToCartSection.tsx).
+
+2. **Reachable Links (`next/link`)**:
+   - Updated [`ProductCard.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/products/ProductCard.tsx) image and title links to point to `/products/${id}`.
+   - Cleaned up [`CategoryGrid.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/products/CategoryGrid.tsx) to apply button styling directly to `<Link>`, eliminating invalid nested `<button>` inside `<a>` tags.
+   - Back-link on detail page routes back to `/products`.
+
+3. **Dynamic Breadcrumbs (`src/components/common/Breadcrumb.tsx`)**:
+   - Standardized strictly on `href` property.
+   - Automatically generates breadcrumbs for static paths (`Home › Products`, `Home › About Us`).
+   - Accepts custom `items` on dynamic routes to render `Home › Products › [Product Name]` instead of numeric IDs.
+
+4. **Active Link Highlighting (`usePathname`)**:
+   - Updated `isActive` in [`Header.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/layout/Header.tsx):
+     ```ts
+     const isActive = (href: string) => {
+         if (href === "/") return pathname === "/";
+         return pathname === href || pathname.startsWith(`${href}/`);
+     };
+     ```
+   - "Products" remains highlighted when on `/products` as well as any `/products/:id` subroute.
+
+5. **Discovery Entry Points**:
+   - Hero search form routes directly to `/products?search=...`.
+   - Category grid cards route directly to `/products?categoryId=...`.
+
+---
+
+## ⚡ Assignment 4: Product Catalog REST API (Wrapper)
+
+### Objectives
+- Build a wrapper API with Route Handlers on top of the existing .NET product API, for product CRUD only:
+  - `GET /api/products` with pagination
+  - `POST /api/products`
+  - `GET /api/products/[id]`
+  - `PUT /api/products/[id]`
+  - `DELETE /api/products/[id]`
+- Configure .NET API base URL using environment variables and keep it strictly on the server (`API_URL`).
+- Convert .NET responses into the product shape used in the React app (`id`, `name`, `price`, `category`, `image`, `rating`), and convert incoming request bodies back to what .NET expects.
+- Pass `page` and `pageSize` through to the .NET API and return total count for the `"Showing X of Y products"` indicator.
+- Return proper status codes and error messages for invalid input (400), non-existent products (404), and upstream failures (502).
+
+### Architecture & Data Flow
+
+```
+[Browser / Client Component]
+       │
+       ▼ (1) HTTP fetch via /api/products (Browser-safe)
+[Next.js Route Handlers: /api/products]
+       │
+       ▼ (2) Direct TypeScript call
+[Server Service Layer: productApiService] ◄── [Server Components: page.tsx]
+       │                                         (Direct call — NO self-fetch overhead)
+       ▼ (3) Server-to-Server HTTP with process.env.API_URL
+[.NET Web API Backend: /api/v1/Products/...]
+```
+
+### Route Handler Endpoints
+
+| Endpoint | Method | Description | Status Codes |
+| :--- | :--- | :--- | :--- |
+| `/api/products` | `GET` | Parses pagination (`page`, `pageSize`) and filters. Forwards to upstream .NET search endpoint. Returns transformed product list with total count. | `200 OK`, `400 Bad Request`, `502 Bad Gateway` |
+| `/api/products` | `POST` | Validates incoming JSON (`name`, `price`, `categoryId`). Maps React shape ➔ .NET shape. Forwards to .NET create endpoint. | `201 Created`, `400 Bad Request`, `502 Bad Gateway` |
+| `/api/products/[id]` | `GET` | Awaits `params.id`. Validates numeric ID. Forwards to .NET by-ID endpoint. Returns React product shape. | `200 OK`, `400 Bad Request`, `404 Not Found`, `502 Bad Gateway` |
+| `/api/products/[id]` | `PUT` | Awaits `params.id`. Validates ID & body fields. Forwards update to .NET API. Returns updated product. | `200 OK`, `400 Bad Request`, `404 Not Found`, `502 Bad Gateway` |
+| `/api/products/[id]` | `DELETE`| Awaits `params.id`. Validates ID. Forwards deletion to upstream .NET API. | `200 OK`, `400 Bad Request`, `404 Not Found`, `502 Bad Gateway` |
+
+### Notes on Endpoint Testing & Verification
+
+All 5 endpoints were tested against the running Next.js application using an automated test suite (`scratch/test-endpoints.js`) verifying status codes, response contracts, and error resilience:
+
+1. **`GET /api/products?page=1&pageSize=2` (Pagination & Contract Test)**:
+   - **Result**: `Status 200 OK`.
+   - **Payload**: Returned `{ products: [...], page: 1, pageSize: 2, totalRecords: 30, totalPages: 15 }`.
+   - **Contract Verification**: Successfully transformed .NET DTO fields into React shape (`id`, `name`, `category`, `price`, `imageUrl`, `image`, `rating`).
+2. **`GET /api/products/1` (Single Product Retrieval)**:
+   - **Result**: `Status 200 OK`.
+   - **Payload**: Returned individual product object with formatted price and details.
+3. **`GET /api/products/9999999` (404 Not Found Test)**:
+   - **Result**: `Status 404 Not Found`.
+   - **Payload**: `{"error":"Not Found"}`.
+4. **`GET /api/products/invalid-id` (400 Input Validation Test)**:
+   - **Result**: `Status 400 Bad Request`.
+   - **Payload**: `{"error":"Invalid product ID. ID must be a numeric value."}`.
+5. **`POST /api/products` (Validation Failure Test)**:
+   - **Request**: Sent `{ name: "Incomplete Product" }` (missing required `price` and `categoryId`).
+   - **Result**: `Status 400 Bad Request`.
+   - **Payload**: `{"error":"Product price is required."}`.
+6. **`PUT /api/products/1` (Validation Failure Test)**:
+   - **Request**: Sent `{ price: -50 }` (negative price).
+   - **Result**: `Status 400 Bad Request`.
+   - **Payload**: `{"error":"Price must be a valid non-negative number."}`.
+7. **`DELETE /api/products/9999999` (Upstream Handling)**:
+   - **Result**: Cleanly captured upstream status and error response without server crash.
+
+---
+
 ## 📁 Clean Folder Structure
 
 ```
@@ -136,6 +254,14 @@ src/
 │   │   └── products/page.tsx
 │   ├── about/
 │   │   └── page.tsx
+│   ├── api/
+│   │   └── products/
+│   │       ├── route.ts              # GET (list + pagination), POST (create)
+│   │       └── [id]/
+│   │           └── route.ts          # GET (detail), PUT (update), DELETE (remove)
+│   ├── products/
+│   │   └── [id]/
+│   │       └── page.tsx              # Dynamic Product Details Page (Server Component)
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
@@ -155,6 +281,7 @@ src/
 │   │   ├── Hero.tsx
 │   │   └── Sidebar.tsx
 │   └── products/
+│       ├── AddToCartSection.tsx      # Client Component for Product Details Page
 │       ├── CategoryGrid.tsx
 │       ├── CtaCard.tsx
 │       ├── CtaGrid.tsx
@@ -170,27 +297,42 @@ src/
 ├── data/
 │   └── products.json
 ├── services/
-│   ├── apiClient.ts
-│   └── apiService.ts
+│   ├── apiClient.ts                  # Resilient HTTP request utility with status tracking
+│   └── productApiServices.ts         # Server-only .NET API communication service
 ├── types/
-│   ├── api.ts
+│   ├── api.ts                        # ApiResult with HTTP status codes
 │   ├── button.ts
 │   ├── card.ts
 │   ├── filterPropTypes.ts
 │   ├── pagination.ts
-│   └── product.ts
+│   └── product.ts                    # Product, ProductResponse, ProductCreateInput, ProductUpdateInput
 └── utils/
     ├── cn.ts
-    └── dataTransformation.ts
+    └── dataTransformation.ts         # Bidirectional schema mappers and input validators
 ```
 
 ---
 
 ## ✅ Deliverables Verification
 
+### Assignment 1 & 2
 - [x] **Next.js project running locally with 0 errors**: Checked with Turbopack dev server and `npm run build`.
 - [x] **Home and About pages rendered inside shared layout**: Accessible at `/` and `/about`.
 - [x] **Ported components and theme working**: Typography, colors, and button/card variants verified.
 - [x] **Three layouts working for respective pages**: Root (`/`, `/about`), Store (`/products`), and Auth (`/login`, `/register`).
 - [x] **Responsive NavBar, Sidebar, and Footer**: Tested across desktop, tablet, and mobile breakpoints.
 - [x] **Folder structure reflects layout groups**: `(store)` and `(auth)` route groups implemented cleanly.
+
+### Assignment 3: Navigation System
+- [x] **All main pages reachable through links**: Nav links, product cards, category cards, and back-links.
+- [x] **Active link highlighting**: `usePathname` active indicator in Header covers main routes and `/products/:id` subroutes.
+- [x] **Breadcrumbs updating per page**: Breadcrumbs reflect `Home › Products › [Product Name]` dynamically.
+- [x] **Working search and category entry points**: Hero search and category grid cards connect seamlessly to filtered catalog.
+- [x] **Dynamic products route implemented**: Accessible at `/products/[id]` with server data fetching and SEO metadata.
+
+### Assignment 4: Product Catalog REST API (Wrapper)
+- [x] **Five working Route Handlers**: GET, POST, GET [id], PUT [id], DELETE [id].
+- [x] **Environment-based API configuration**: Uses server-only `API_URL` without browser exposure.
+- [x] **Paginated product list response**: Returns paginated products with `totalRecords` and `totalPages`.
+- [x] **Correct HTTP status codes**: 200, 201, 400 Bad Request, 404 Not Found, 502 Bad Gateway.
+- [x] **Notes on how each endpoint was tested**: Documented test cases, inputs, and verified outputs.

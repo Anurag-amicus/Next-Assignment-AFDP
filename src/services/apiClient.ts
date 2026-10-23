@@ -17,13 +17,21 @@ export async function apiRequest<T>(
 
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
+            const text = await response.text().catch(() => "");
+            let errorMessage: string | null = null;
+            try {
+                const parsed = JSON.parse(text);
+                errorMessage = parsed.message || parsed.title || parsed.error || (typeof parsed === "string" ? parsed : null);
+            } catch {
+                if (text && text.length < 200) {
+                    errorMessage = text;
+                }
+            }
 
             return {
                 success: false,
-                error:
-                    errorData?.message ??
-                    `Request failed with status ${response.status}`,
+                status: response.status,
+                error: errorMessage ?? `Request failed with status ${response.status}`,
             };
         }
 
@@ -33,18 +41,21 @@ export async function apiRequest<T>(
 
         return {
             success: true,
+            status: response.status,
             data,
         };
     } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
             return {
                 success: false,
+                status: 499,
                 error: "Request was cancelled.",
             };
         }
 
         return {
             success: false,
+            status: 502,
             error:
                 error instanceof Error
                     ? error.message
