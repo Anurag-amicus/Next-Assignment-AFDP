@@ -80,6 +80,7 @@ export interface ProductCardProps extends Product {
 
 export interface FeaturedCarouselProps {
     onAddToCart?: (product: Product, quantity: number) => void;
+    initialProducts?: Product[];
 }
 
 export interface ProductListingPageProps {

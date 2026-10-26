@@ -2,27 +2,29 @@ import Link from "next/link";
 import { productApiService } from "@/services/productApiServices";
 import type { CategoryItem } from "@/types/product";
 
-const DEFAULT_CATEGORIES: CategoryItem[] = [
-    { categoryId: 1, name: "Electronics" },
-    { categoryId: 2, name: "Clothing" },
-    { categoryId: 3, name: "Books" },
-    { categoryId: 4, name: "Home" },
-    { categoryId: 5, name: "Sports" },
-    { categoryId: 6, name: "Everyday Use" },
-    { categoryId: 7, name: "Toys" },
-    { categoryId: 8, name: "Accessories" },
-];
-
 export default async function CategoryGrid() {
-    let categories: CategoryItem[] = DEFAULT_CATEGORIES;
+    let categories: CategoryItem[] = [];
 
     try {
-        const res = await productApiService.getCategories({ cache: "no-store" });
+        const res = await productApiService.getCategories({ next: { revalidate: 60 } });
         if (res.success && res.data && res.data.length > 0) {
             categories = res.data;
         }
-    } catch {
-        categories = DEFAULT_CATEGORIES;
+    } catch (error) {
+        console.error("CategoryGrid: Failed to fetch categories:", error);
+    }
+
+    if (categories.length === 0) {
+        return (
+            <section className="w-full bg-white px-6 py-7.5 max-[520px]:px-4.5 max-[520px]:pt-10 max-[520px]:pb-13.75">
+                <div className="mx-auto w-full max-w-287.5 text-center">
+                    <h2 className="m-0 mb-3 text-black font-display text-3xl font-extrabold leading-tight tracking-tight max-[768px]:text-2xl max-[480px]:text-xl">
+                        Shop by Category
+                    </h2>
+                    <p className="text-muted text-sm m-0">Categories currently unavailable.</p>
+                </div>
+            </section>
+        );
     }
 
     return (

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -10,27 +9,13 @@ import { Navigation, Pagination } from "swiper/modules";
 import Arrow from "@/components/common/Arrow";
 import ProductCard from "@/components/products/ProductCard";
 import type { FeaturedCarouselProps, Product } from "@/types/product";
-import productsData from "@/data/products.json";
-import { productApiService } from "@/services/productApiServices";
-import { transformProducts } from "@/utils/dataTransformation";
 
-function FeaturedCarousel({ onAddToCart }: FeaturedCarouselProps = {}) {
-    const [products, setProducts] = useState<Product[]>(() => productsData.slice(0, 8));
+function FeaturedCarousel({ onAddToCart, initialProducts = [] }: FeaturedCarouselProps = {}) {
+    const products: Product[] = initialProducts;
 
-    useEffect(() => {
-        let isMounted = true;
-        productApiService.getProducts({ Page: 1, PageSize: 8 }).then((res) => {
-            if (isMounted && res.success && res.data?.products?.length) {
-                setProducts(transformProducts(res.data.products));
-            }
-        }).catch(() => {
-            // Keep initial fallback products
-        });
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
+    if (!products || products.length === 0) {
+        return null;
+    }
 
     return (
         <section className="w-full bg-white px-6 pt-7.5 pb-2.5 max-[768px]:pt-11.25 max-[768px]:px-4.5 max-[768px]:pb-15">
