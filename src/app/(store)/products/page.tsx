@@ -58,23 +58,15 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         queryParams.SortOrder = resolvedParams.sortOrder;
     }
 
-    let products: Product[] = [];
-    let totalRecords = 0;
-    let totalPages = 1;
-    let error: string | null = null;
+    const response = await productApiService.getProducts(queryParams, { cache: "no-store" });
 
-    try {
-        const response = await productApiService.getProducts(queryParams, { cache: "no-store" });
-        if (response.success && response.data) {
-            products = transformProducts(response.data.products);
-            totalRecords = response.data.totalRecords;
-            totalPages = response.data.totalPages;
-        } else if (!response.success) {
-            error = response.error;
-        }
-    } catch (err) {
-        error = err instanceof Error ? err.message : "Failed to load products.";
+    if (!response.success) {
+        throw new Error(response.error || "Failed to load product catalog from server.");
     }
+
+    const products: Product[] = transformProducts(response.data?.products);
+    const totalRecords = response.data?.totalRecords || 0;
+    const totalPages = response.data?.totalPages || 1;
 
     const searchTerm = resolvedParams.search?.trim();
 
@@ -96,33 +88,23 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     return (
         <div className="w-full">
             {/* Results count & active sorting info bar */}
-            {!error && (
-                <div className="w-full min-h-6 mb-3 flex items-center justify-between max-[520px]:items-start max-[520px]:gap-2.5">
-                    <p className="m-0 text-sm leading-none">
-                        Showing {products.length} of {totalRecords} results
-                        {searchTerm && ` for "${searchTerm}"`}
+            <div className="w-full min-h-6 mb-3 flex items-center justify-between max-[520px]:items-start max-[520px]:gap-2.5">
+                <p className="m-0 text-sm leading-none">
+                    Showing {products.length} of {totalRecords} results
+                    {searchTerm && ` for "${searchTerm}"`}
+                </p>
+
+                {sortLabel && directionLabel && (
+                    <p className="m-0 text-muted text-xs leading-tight text-right">
+                        Sorted by:{" "}
+                        <strong className="text-charcoal font-bold">{sortLabel}</strong>{" "}
+                        {directionLabel}
                     </p>
-
-                    {sortLabel && directionLabel && (
-                        <p className="m-0 text-muted text-xs leading-tight text-right">
-                            Sorted by:{" "}
-                            <strong className="text-charcoal font-bold">{sortLabel}</strong>{" "}
-                            {directionLabel}
-                        </p>
-                    )}
-                </div>
-            )}
-
-            {/* Error state */}
-            {error && (
-                <div className="min-h-75 flex flex-col items-center justify-center gap-4.5 border border-border text-muted text-base text-center p-8">
-                    <p className="m-0 leading-normal text-red-600">{error}</p>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Products Grid or Empty State */}
-            {!error && (
-                products.length === 0 ? (
+            {products.length === 0 ? (
                     <div className="min-h-80 flex flex-col items-center justify-center gap-2 border border-border text-center">
                         <p className="m-0 text-charcoal text-lg font-bold leading-normal">
                             No products found
@@ -138,10 +120,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                         ))}
                     </div>
                 )
-            )}
+            }
 
             {/* Pagination */}
-            {!error && totalPages > 1 && (
+            {totalPages > 1 && (
                 <Suspense fallback={null}>
                     <Pagination
                         currentPage={currentPage}
