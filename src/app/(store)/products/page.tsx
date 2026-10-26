@@ -3,26 +3,16 @@ import ProductCard from "@/components/products/ProductCard";
 import Pagination from "@/components/common/Pagination";
 import { productApiService } from "@/services/productApiServices";
 import { transformProducts } from "@/utils/dataTransformation";
-import type { ProductQueryParams, Product } from "@/types/product";
+import type { ProductQueryParams, Product, ProductsPageProps } from "@/types/product";
+
+export const revalidate = 60;
 
 export const metadata = {
     title: "Product Listing | Online Express",
     description: "Explore our extensive collection of quality products, top deals, and curated categories.",
 };
 
-interface ProductsPageProps {
-    searchParams: Promise<{
-        search?: string;
-        categoryId?: string;
-        brandId?: string;
-        minPrice?: string;
-        maxPrice?: string;
-        minRating?: string;
-        sortBy?: string;
-        sortOrder?: "asc" | "desc";
-        page?: string;
-    }>;
-}
+
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
     const resolvedParams = await searchParams;
@@ -58,7 +48,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         queryParams.SortOrder = resolvedParams.sortOrder;
     }
 
-    const response = await productApiService.getProducts(queryParams, { cache: "no-store" });
+    const response = await productApiService.getProducts(queryParams, {
+        next: { revalidate: 60 },
+    });
 
     if (!response.success) {
         throw new Error(response.error || "Failed to load product catalog from server.");

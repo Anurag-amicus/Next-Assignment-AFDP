@@ -212,7 +212,13 @@ src/app/
 
 ### Notes on Endpoint Testing & Verification
 
-All 5 endpoints were tested against the running Next.js application using an automated test suite (`scratch/test-endpoints.js`) verifying status codes, response contracts, and error resilience:
+All 5 endpoints were tested against the running Next.js application using an automated test suite ([`scripts/test-endpoints.js`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/scripts/test-endpoints.js)). You can execute the entire test suite locally anytime with:
+
+```bash
+npm run test:api
+```
+
+The test runner verifies HTTP status codes, response contracts, and error resilience across 7 test cases:
 
 1. **`GET /api/products?page=1&pageSize=2` (Pagination & Contract Test)**:
    - **Result**: `Status 200 OK`.
@@ -328,9 +334,90 @@ Because all state lives in the URL query string:
 
 ---
 
+## ⚡ Assignment 6: Product Catalog with SSG and ISR
+
+### Objectives
+- Statically generate the Product Listing Page shell and category catalog at build time.
+- Implement **Incremental Static Regeneration (ISR)** with 60-second background revalidation on the Product Details Page (`/products/[id]`) using `generateStaticParams()`.
+- Move Home Page featured products fetching from client-side `useEffect` to server-side rendering with ISR.
+- Eliminate mock data fallbacks, ensuring real errors flow directly to error boundaries.
+- Provide a rigorous, in-depth architectural comparison between traditional React Client-Side Fetching and Next.js SSG/ISR.
+
+---
+
+### 🏗️ SSG and ISR Implementation Architecture
+
+#### 1. Home Page Featured Products (`/`)
+- **Server Component**: [`src/app/page.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/app/page.tsx) is an asynchronous Server Component that fetches the top 8 products server-side using `productApiService.getProducts({ Page: 1, PageSize: 8 }, { next: { revalidate: 60 } })`.
+- **Eliminated Client Waterfall**: The client carousel component ([`FeaturedCarousel.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/products/FeaturedCarousel.tsx)) receives `initialProducts` as a prop and renders immediately without initiating a client-side `useEffect` network request.
+- **Prerendered with ISR**: Configured segment-level `export const revalidate = 60;`. Next.js prerenders the Home page at build time (`○ /` with `Revalidate 1m Expire 1y`).
+
+#### 2. Product Details Page ISR (`/products/[id]`)
+- **`generateStaticParams()`**: Queries the upstream API at build time to statically generate HTML for the top 20 known product IDs (`/products/1`, `/products/2`, etc.).
+- **60-Second Background Revalidation**: Segment-level `export const revalidate = 60;` applies the Stale-While-Revalidate caching strategy. The first visitor after 60 seconds is served the cached page instantly while Next.js triggers a background revalidation to query the API and update the cache for future visitors.
+- **On-Demand Generation (`export const dynamicParams = true;`)**: Products not pre-rendered at build time are generated on-demand upon first visit, served to the user, and immediately added to the ISR cache for subsequent requests.
+- **Error Boundaries**: Dedicated error boundary ([`src/app/products/[id]/error.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/app/products/[id]/error.tsx)) and 404 page ([`src/app/products/[id]/not-found.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/app/products/[id]/not-found.tsx)) handle failures cleanly without dummy fallbacks.
+
+#### 3. Product Listing Shell & Catalog (`/products`)
+- **Statically Cached Shell**: The store layout ([`src/app/(store)/layout.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/app/(store)/layout.tsx)) pre-renders the page heading, breadcrumbs, sidebar categories, and brand filters with 60-second ISR caching.
+- **Dynamic Query Filtering**: Dynamic URL search parameters (`?search=...&categoryId=...&page=...`) are rendered on-demand on the server with underlying API requests cached per query in the Next.js Data Cache.
+
+---
+
+### 📊 In-Depth Comparison: React Client-Side Fetching vs. Next.js SSG / ISR
+
+| Feature / Metric | Traditional React (Client-Side Fetching) | Next.js SSG / ISR (Incremental Static Regeneration) |
+| :--- | :--- | :--- |
+| **Initial HTML Payload** | **Empty Shell (`<div id="root"></div>`)**.<br>Contains no product text, images, or semantic content. | **Complete, Semantic HTML Document**.<br>Product cards, images, titles, prices, and links are fully formed in the initial response. |
+| **Time to First Byte (TTFB)** | Fast TTFB for the empty HTML shell, but misleading because the user cannot see or interact with any data. | **Ultra-Low TTFB (<50ms)**.<br>Cached static pages are served directly from edge CDN / server memory cache without database delay. |
+| **First Contentful Paint (FCP)** | Delayed until the browser downloads, parses, and executes the entire React bundle. | **Near Instantaneous**.<br>The browser paints meaningful UI content on the first rendered frame. |
+| **Largest Contentful Paint (LCP)** | **Slow (1.8s - 3.5s+)**.<br>Must complete: HTML download $\rightarrow$ JS parse/execute $\rightarrow$ component mount $\rightarrow$ API network call $\rightarrow$ state update $\rightarrow$ DOM render. | **Fast (<0.8s - 1.2s)**.<br>The largest content element (hero image, product image, title) is embedded directly in the initial HTML markup. |
+| **Cumulative Layout Shift (CLS)** | **High Risk**.<br>Page elements jump and shift when API responses arrive and replace loading spinners or empty containers with cards. | **Zero CLS (0.00)**.<br>Grid layouts, card dimensions, and text placeholders are present in the DOM from the initial paint. |
+| **Search Engine Optimization (SEO)** | **Poor**.<br>Web crawlers (Googlebot, Bingbot, social media bots) often miss asynchronously fetched content or penalize slow rendering. | **Excellent**.<br>Search engine spiders index complete HTML, metadata, and Open Graph tags immediately without JavaScript execution. |
+| **Social Media Sharing (Open Graph)** | **Fails**.<br>Facebook, Twitter/X, and WhatsApp scrapers do not run client JavaScript, resulting in generic or empty link previews. | **Fully Functional**.<br>`generateMetadata` embeds per-product Open Graph titles, descriptions, and canonical URLs on the server. |
+| **Data Freshness** | **Strictly Real-Time**.<br>Fetches fresh data on every component mount, at the cost of high latency and server load. | **Configurable Freshness (e.g. 60s)**.<br>Serves cached data instantly while refreshing in the background at set intervals via Stale-While-Revalidate. |
+| **Server / Database Load** | **High**.<br>Every single page view across all users triggers a distinct HTTP request to the backend database/API. | **Extremely Low**.<br>Thousands of user visits within a 60-second window hit the static cache, resulting in only 1 backend query per minute. |
+| **Offline / Slow Network Resilience** | Shows a blank screen or spinner until connection succeeds. Fails completely on poor mobile connections. | Static HTML and cached pages remain viewable even if connection drops or the backend API encounters transient latency. |
+| **Client JS Bundle Size** | Larger bundle because client components must include data-fetching libraries, abort controllers, and error handlers. | Smaller bundle because data-fetching logic, schemas, and transformations stay strictly on the server. |
+
+---
+
+### 🖥️ Verified Next.js Production Build Output
+
+Running `npm run build` generates the complete production route matrix:
+
+```text
+Route (app)             Revalidate  Expire
+┌ ○ /                           1m      1y
+├ ○ /_not-found
+├ ○ /about
+├ ƒ /api/products
+├ ƒ /api/products/[id]
+├ ○ /login
+├ ƒ /products
+├   /products/[id]
+│ ├ ● /products/1               1m      1y
+│ ├ ● /products/2               1m      1y
+│ ├ ● /products/3               1m      1y
+│ └ ● [+17 more paths]
+└ ○ /register
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+```
+
+- `○ /`: Home Page statically pre-rendered with 60-second ISR.
+- `● /products/[id]`: Product Details pre-renders 20 static product pages with 60-second ISR, generating new product IDs on-demand (`dynamicParams = true`).
+- `ƒ /products`: Product Catalog dynamically renders on-demand to process combined URL search, filter, and pagination parameters, backed by Next.js Data Cache.
+
+---
+
 ## 📁 Clean Folder Structure
 
 ```
+scripts/
+└── test-endpoints.js                 # Automated test suite for Assignment 4 API wrapper
 src/
 ├── app/
 │   ├── (auth)/
@@ -442,3 +529,13 @@ src/
 - [x] **Working Add to Cart control**: Isolated client component with quantity controls and feedback toast.
 - [x] **Streaming Loading & Error Boundaries**: Instant skeletons (`loading.tsx`), resilient error recovery (`error.tsx`), and dedicated 404 handling (`not-found.tsx`).
 - [x] **Architectural documentation**: Comprehensive Server vs. Client breakdown table and rationale.
+
+### Assignment 6: Product Catalog with SSG and ISR
+- [x] **Product Listing Page Shell SSG**: Pre-renders store layout, sidebar, and breadcrumbs with 60-second ISR.
+- [x] **Product Details Page ISR with 60-Second Revalidation**: `export const revalidate = 60` and `generateStaticParams()` pre-render top 20 known product pages at build time.
+- [x] **On-Demand Static Generation (`dynamicParams = true`)**: New or unbuilt product IDs are rendered on-demand on first request and cached for future visitors.
+- [x] **Home Page Featured Products Server-Fetched**: Direct server component fetching with zero client `useEffect` waterfall.
+- [x] **Zero Mock Data Fallback**: Real API data with graceful error boundary recovery and dedicated 404 pages.
+- [x] **Documented Comparison**: Exhaustive comparison table comparing traditional React client-side fetching to Next.js SSG/ISR across 11 key performance, SEO, and UX metrics.
+- [x] **Verified Production Build**: Full build output captured and documented (`○`, `●`, `ƒ`).
+

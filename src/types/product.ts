@@ -83,12 +83,16 @@ export interface FeaturedCarouselProps {
     initialProducts?: Product[];
 }
 
-export interface ProductListingPageProps {
-    onAddToCart?: (product: Product, quantity: number) => void;
-    cartCount?: number;
-}
-
-export interface HomePageProps {
-    onAddToCart?: (product: Product, quantity: number) => void;
-    cartCount?: number;
+export interface ProductsPageProps {
+    searchParams: Promise<{
+        search?: string;
+        categoryId?: string;
+        brandId?: string;
+        minPrice?: string;
+        maxPrice?: string;
+        minRating?: string;
+        sortBy?: string;
+        sortOrder?: "asc" | "desc";
+        page?: string;
+    }>;
 }

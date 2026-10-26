@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:api": "node scripts/test-endpoints.js"
   },
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^7.3.1",
