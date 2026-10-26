@@ -7,8 +7,29 @@ import { productApiService } from "@/services/productApiServices";
 import { transformProduct } from "@/utils/dataTransformation";
 import type { Metadata } from "next";
 
+export const revalidate = 60;
+export const dynamicParams = true;
+
 export interface ProductDetailPageProps {
     params: Promise<{ id: string }>;
+}
+
+export async function generateStaticParams() {
+    try {
+        const res = await productApiService.getProducts(
+            { Page: 1, PageSize: 20 },
+            { next: { revalidate: 60 } }
+        );
+        if (res.success && res.data?.products?.length) {
+            return res.data.products.map((p) => ({
+                id: String(p.productId),
+            }));
+        }
+    } catch (error) {
+        console.error("generateStaticParams: Error fetching products from API:", error);
+    }
+
+    return [];
 }
 
 export async function generateMetadata({
@@ -17,7 +38,9 @@ export async function generateMetadata({
     const { id } = await params;
 
     try {
-        const res = await productApiService.getProductById(id, { cache: "no-store" });
+        const res = await productApiService.getProductById(id, {
+            next: { revalidate: 60 },
+        });
         if (res.success && res.data) {
             const product = transformProduct(res.data);
             return {
@@ -27,8 +50,8 @@ export async function generateMetadata({
                 }`.trim(),
             };
         }
-    } catch {
-        // Fallback below
+    } catch (error) {
+        console.error(`generateMetadata: Error generating metadata for product ID ${id}:`, error);
     }
 
     return {
@@ -46,13 +69,15 @@ export default async function ProductDetailPage({
         notFound();
     }
 
-    const res = await productApiService.getProductById(id, { cache: "no-store" });
+    const res = await productApiService.getProductById(id, {
+        next: { revalidate: 60 },
+    });
 
     if (!res.success) {
         if (res.status === 404) {
             notFound();
         }
-        throw new Error(res.error || "Failed to load product details from server.");
+        throw new Error(res.error || `Failed to load product #${id} from server.`);
     }
 
     const product = transformProduct(res.data);
