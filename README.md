@@ -240,6 +240,94 @@ All 5 endpoints were tested against the running Next.js application using an aut
 
 ---
 
+## 🔍 Assignment 5: Product Listing, Search and Product Page
+
+### Objectives
+- Fetch product catalog and single product data inside Server Components for optimal performance, instant First Contentful Paint (FCP), and search engine optimization (SEO).
+- Implement a generic debounced search hook (`useDebounce<T>`) and synchronize keystrokes directly with the URL `search` parameter without full page reloads.
+- Keep category, brand, price range, rating, sort order, and pagination in complete synchronization with shareable, bookmarkable URL query parameters.
+- Provide responsive empty states (`"No products found"`) and an active `"Showing X of Y results"` count.
+- Keep the Product Details Page server-rendered at `/products/[id]` with dynamic SEO metadata, and isolate interactivity (`QuantitySelector`, `AddToCartSection` toast) inside targeted Client Components.
+- Implement production-grade streaming skeletons (`loading.tsx`), resilient error boundaries (`error.tsx`), and clean not-found handlers (`not-found.tsx`).
+
+### 📐 Architectural Breakdown: Server vs. Client Components
+
+Next.js App Router promotes rendering as much as possible on the server, pushing Client Component boundaries to the interactive leaves of the component tree.
+
+| Component / Route File | Component Type | Architectural Rationale |
+| :--- | :--- | :--- |
+| `src/app/(store)/products/page.tsx` | **Server Component** | Awaits Next.js 16 `searchParams`, executes server-only data fetching directly via `productApiService.getProducts()` without client bundle bloat or waterfall network hops, and renders the catalog HTML on the server. |
+| `src/app/products/[id]/page.tsx` | **Server Component** | Awaits dynamic route `params`, fetches product details on the server, generates dynamic SEO and OpenGraph metadata (`generateMetadata`), preventing layout shift. |
+| `src/app/(store)/layout.tsx` | **Server Component** | Fetches `categories` and `brands` in parallel on the server using `Promise.all` and passes them as static props into the sidebar. |
+| `src/components/products/ProductCard.tsx` | **Server Component** | Pure presentational component that renders semantic HTML, product links, formatted prices, and ratings without client state or event listeners. |
+| `src/components/layout/Header.tsx` | **Client Component** (`"use client"`) | Requires DOM event listeners for user input keystrokes, mobile hamburger drawer toggle, and synchronizes URL search parameters via `useSearchParams()` and `useRouter()`. |
+| `src/hooks/useDebounce.ts` | **Client Hook** | Uses `useState` and `useEffect` with a timer to delay updating debounced values by 300ms, preventing API request flooding. |
+| `src/components/layout/Sidebar.tsx` | **Client Component** (`"use client"`) | Manages accordion states for mobile filter expansion and triggers interactive URL filter pushes. |
+| `src/components/products/filters/*` | **Client Components** (`"use client"`) | Renders interactive checkboxes, radio buttons, and toggles for category, brand, price range, rating, and sort direction. |
+| `src/components/common/Pagination.tsx` | **Client Component** (`"use client"`) | Listens to page clicks and navigates via `router.push()` while preserving all existing filter and search parameters. |
+| `src/components/products/AddToCartSection.tsx` | **Client Component** (`"use client"`) | Isolates local quantity state (`quantity`), dynamic price calculation, and 2.5s temporary feedback toast to an interactive island. |
+| `src/app/(store)/products/loading.tsx` | **Server Component** | Instant streaming skeleton matching the 8-card grid, info bar, and pagination controls for zero Cumulative Layout Shift (CLS). |
+| `src/app/(store)/products/error.tsx` | **Client Component** (`"use client"`) | Catches unexpected server/network failures and renders an interactive **"Try Again"** button calling `reset()`. |
+| `src/app/products/[id]/loading.tsx` | **Server Component** | Instant streaming skeleton for breadcrumbs, image container, badges, ratings, price, description, and AddToCart section. |
+| `src/app/products/[id]/error.tsx` | **Client Component** (`"use client"`) | Error boundary for server outages with **"Try Again"** and **"Browse All Products"** navigation. |
+| `src/app/products/[id]/not-found.tsx` | **Server Component** | Dedicated 404 page rendered when a product does not exist, with navigation back to `/products`. |
+
+### ⚡ Debounced Search & URL Synchronization
+
+The search flow is powered by the generic `useDebounce` hook ([`src/hooks/useDebounce.ts`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/hooks/useDebounce.ts)):
+```typescript
+import { useEffect, useState } from "react";
+
+export function useDebounce<T>(value: T, delay: number = 300): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(timer);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+```
+
+1. **Context-Aware Routing:**
+   - **On `/products`**: As the user types into the header search bar, keystrokes are debounced by 300ms. When `debouncedSearch` changes, `Header.tsx` automatically updates the URL query string (`?search=...`) and resets the pagination parameter (`page`), triggering a server re-fetch without full page reload.
+   - **On other routes (`/`, `/about`, `/login`)**: The search input does not navigate on every keystroke. Pressing Enter or clicking the magnifying glass explicitly routes the user to `/products?search=...`.
+2. **Bidirectional State Sync (React 19 Safe):**
+   - The search input initializes from `searchParams.get("search")`.
+   - When the URL changes externally (e.g., navigating back in browser history or clicking a category link), the input value adjusts during render without triggering React 19's `react-hooks/set-state-in-effect` cascade warning.
+
+### 🔄 Multi-Filter & Shareable URL Query State
+
+All catalog state is represented directly in the URL:
+- `search`: Filter by keyword.
+- `categoryId`: Filter by specific category ID.
+- `brandId`: Filter by specific brand ID.
+- `minPrice` & `maxPrice`: Filter by selected price bracket.
+- `minRating`: Filter by minimum customer review score (3+ or 4+ stars).
+- `sortBy`: Sort property (`name`, `price`, `rating`).
+- `sortOrder`: Sort direction (`asc`, `desc`).
+- `page`: Current page index.
+
+Because all state lives in the URL query string:
+- Any filtered catalog view can be copied and shared with other users.
+- Refreshing the page preserves the exact search terms, active filters, and sort options.
+- Unchecking a filter cleanly removes the key from the query string and recalculates the result set.
+
+### 🛡️ Three-Tier Error & Loading Strategy
+
+1. **404 Not Found**: If a product does not exist, `notFound()` is invoked in `src/app/products/[id]/page.tsx`, rendering `not-found.tsx` with proper 404 HTTP status.
+2. **5xx / Network Outage**: If the backend API fails, the server component throws `new Error(...)`, triggering `error.tsx` with an interactive "Try Again" `reset()` button.
+3. **Empty Filter Results**: If a valid filter returns 0 products, an inline empty state (`"No products found"`) renders inside the layout with sidebar filters intact.
+4. **Streaming Skeletons**: `loading.tsx` renders instantaneously via React Suspense, eliminating layout shift while backend data is fetched.
+
+---
+
 ## 📁 Clean Folder Structure
 
 ```
@@ -251,7 +339,10 @@ src/
 │   │   └── register/page.tsx
 │   ├── (store)/
 │   │   ├── layout.tsx
-│   │   └── products/page.tsx
+│   │   └── products/
+│   │       ├── error.tsx             # Error boundary with reset()
+│   │       ├── loading.tsx           # 8-card streaming skeleton
+│   │       └── page.tsx              # Product catalog (Server Component)
 │   ├── about/
 │   │   └── page.tsx
 │   ├── api/
@@ -261,6 +352,9 @@ src/
 │   │           └── route.ts          # GET (detail), PUT (update), DELETE (remove)
 │   ├── products/
 │   │   └── [id]/
+│   │       ├── error.tsx             # Detail error boundary
+│   │       ├── loading.tsx           # Full-page detail skeleton
+│   │       ├── not-found.tsx         # Dedicated 404 page
 │   │       └── page.tsx              # Dynamic Product Details Page (Server Component)
 │   ├── globals.css
 │   ├── layout.tsx
@@ -296,6 +390,8 @@ src/
 │           └── SortFilter.tsx
 ├── data/
 │   └── products.json
+├── hooks/
+│   └── useDebounce.ts                # Generic 300ms debouncing hook for search input
 ├── services/
 │   ├── apiClient.ts                  # Resilient HTTP request utility with status tracking
 │   └── productApiServices.ts         # Server-only .NET API communication service
@@ -336,3 +432,13 @@ src/
 - [x] **Paginated product list response**: Returns paginated products with `totalRecords` and `totalPages`.
 - [x] **Correct HTTP status codes**: 200, 201, 400 Bad Request, 404 Not Found, 502 Bad Gateway.
 - [x] **Notes on how each endpoint was tested**: Documented test cases, inputs, and verified outputs.
+
+### Assignment 5: Product Listing, Search and Product Page
+- [x] **Listing page with search, filters, sort and pagination combined**: Operates together over URL state on `/products`.
+- [x] **Debounced search**: Implemented via generic `useDebounce` hook (300ms) with zero layout shift.
+- [x] **State driven by the URL**: All filters, search terms, sorting, and pagination survive browser refresh and link sharing.
+- [x] **Empty state and product count**: Active `"Showing X of Y results"` and clean empty state for unmatched filters.
+- [x] **Product details page showing server-fetched data**: Dynamic route `/products/[id]` with SSR data and metadata.
+- [x] **Working Add to Cart control**: Isolated client component with quantity controls and feedback toast.
+- [x] **Streaming Loading & Error Boundaries**: Instant skeletons (`loading.tsx`), resilient error recovery (`error.tsx`), and dedicated 404 handling (`not-found.tsx`).
+- [x] **Architectural documentation**: Comprehensive Server vs. Client breakdown table and rationale.
