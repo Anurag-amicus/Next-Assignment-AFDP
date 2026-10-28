@@ -37,6 +37,7 @@ export default function RegisterForm() {
             )}
 
             <form action={formAction} className="flex flex-col gap-4">
+                <input type="hidden" name="returnUrl" value={returnUrl} />
                 <div>
                     <label
                         htmlFor="register-name"

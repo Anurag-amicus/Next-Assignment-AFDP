@@ -132,7 +132,14 @@ export async function registerAction(
         };
     }
 
-    redirect("/login?registered=true");
+    const rawReturnUrl = getFormString(formData, "returnUrl");
+    const targetUrl = sanitizeReturnUrl(rawReturnUrl);
+    const redirectUrl =
+        targetUrl !== "/"
+            ? `/login?registered=true&returnUrl=${encodeURIComponent(targetUrl)}`
+            : "/login?registered=true";
+
+    redirect(redirectUrl);
 }
 
 export async function logoutAction(): Promise<void> {
