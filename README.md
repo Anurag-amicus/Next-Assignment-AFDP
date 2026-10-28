@@ -55,6 +55,12 @@ npm run start
 | `src/app/products/[id]/page.tsx` | **Server** | Dynamic product route; fetches data server-side; generates dynamic SEO metadata. |
 | `src/app/api/products/route.ts` | **Server (Route Handler)** | REST API proxy and transformation wrapper for product list & creation. |
 | `src/app/api/products/[id]/route.ts` | **Server (Route Handler)** | REST API proxy for individual product retrieval, update, and deletion. |
+| `src/proxy.ts` | **Server (Proxy)** | Next.js 16 edge request interceptor; enforces route guards for `/checkout` and `/orders`, logs execution duration. |
+| `src/app/actions/authActions.ts` | **Server Action** | Form submission handlers (`loginAction`, `registerAction`, `logoutAction`), open-redirect sanitization, cookie dispatch. |
+| `src/lib/session.ts` | **Server Utility** | Secure HttpOnly cookie session manager (`access_token`, `refresh_token`, `auth_user`). |
+| `src/lib/auth.ts` | **Server Utility** | Proactive token renewal helper for server-side callers, kept decoupled from Server Action exports. |
+| `src/app/checkout/page.tsx` | **Server** | Protected checkout stub requiring session authentication; renders status banner and verified user details. |
+| `src/app/orders/page.tsx` | **Server** | Protected orders history stub requiring session authentication; renders status banner and verified user details. |
 | `src/components/layout/Footer.tsx` | **Server** | Static trust bar, site map links, and copyright notice. |
 | `src/components/products/CategoryGrid.tsx` | **Server** | Fetches categories server-side with fallback for instant, JS-free rendering. |
 | `src/components/common/Button.tsx` | **Client** | Manages browser events (`onClick`), loading states, and interactive feedback. |
@@ -62,6 +68,9 @@ npm run start
 | `src/components/products/AddToCartSection.tsx` | **Client** | Isolates interactive quantity selection, Add to Cart event, and success toast. |
 | `src/components/products/FeaturedCarousel.tsx` | **Client** | Controls touch events, sliding navigation, and DOM events via Swiper. |
 | `src/components/layout/Header.tsx` | **Client** | Reads pathname for active route indicators, manages search input, and controls mobile drawer state. |
+| `src/components/layout/HeaderUserMenu.tsx` | **Client** | Handles profile toggle, user initials badge, click-outside dropdown, and logout trigger. |
+| `src/components/auth/LoginForm.tsx` | **Client** | Manages login form submission via `useActionState`, return URL pass-through, and eye-icon password toggle. |
+| `src/components/auth/RegisterForm.tsx` | **Client** | Manages registration via `useActionState`, field validation, and eye-icon password toggles. |
 | `src/components/layout/Sidebar.tsx` | **Client** | Interacts with Next.js navigation hooks (`useRouter`, `useSearchParams`) to update URL filters. |
 
 ### Design System & Theme Tokens
@@ -143,11 +152,11 @@ src/app/
    - Async Server Component utilizing Next.js 16 awaited params: `const { id } = await params`.
    - Generates dynamic SEO metadata (`generateMetadata`) reflecting the active product name and description.
    - Server-renders product specifications, tax-inclusive pricing, brand/category badges, ratings, and guarantee perks.
-   - Renders interactive quantity controls and cart submission in [`AddToCartSection.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/products/AddToCartSection.tsx).
+   - Renders interactive quantity controls and cart submission in `src/components/products/AddToCartSection.tsx`.
 
 2. **Reachable Links (`next/link`)**:
-   - Updated [`ProductCard.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/products/ProductCard.tsx) image and title links to point to `/products/${id}`.
-   - Cleaned up [`CategoryGrid.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/products/CategoryGrid.tsx) to apply button styling directly to `<Link>`, eliminating invalid nested `<button>` inside `<a>` tags.
+   - Updated `src/components/products/ProductCard.tsx` image and title links to point to `/products/${id}`.
+   - Cleaned up `src/components/products/CategoryGrid.tsx` to apply button styling directly to `<Link>`, eliminating invalid nested `<button>` inside `<a>` tags.
    - Back-link on detail page routes back to `/products`.
 
 3. **Dynamic Breadcrumbs (`src/components/common/Breadcrumb.tsx`)**:
@@ -156,7 +165,7 @@ src/app/
    - Accepts custom `items` on dynamic routes to render `Home › Products › [Product Name]` instead of numeric IDs.
 
 4. **Active Link Highlighting (`usePathname`)**:
-   - Updated `isActive` in [`Header.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/layout/Header.tsx):
+   - Updated `isActive` in `src/components/layout/Header.tsx`:
      ```ts
      const isActive = (href: string) => {
          if (href === "/") return pathname === "/";
@@ -212,7 +221,7 @@ src/app/
 
 ### Notes on Endpoint Testing & Verification
 
-All 5 endpoints were tested against the running Next.js application using an automated test suite ([`scripts/test-endpoints.js`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/scripts/test-endpoints.js)). You can execute the entire test suite locally anytime with:
+All 5 endpoints were tested against the running Next.js application using an automated test suite (`scripts/test-endpoints.js`). You can execute the entire test suite locally anytime with:
 
 ```bash
 npm run test:api
@@ -280,7 +289,7 @@ Next.js App Router promotes rendering as much as possible on the server, pushing
 
 ### ⚡ Debounced Search & URL Synchronization
 
-The search flow is powered by the generic `useDebounce` hook ([`src/hooks/useDebounce.ts`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/hooks/useDebounce.ts)):
+The search flow is powered by the generic `useDebounce` hook (`src/hooks/useDebounce.ts`):
 ```typescript
 import { useEffect, useState } from "react";
 
@@ -348,18 +357,18 @@ Because all state lives in the URL query string:
 ### 🏗️ SSG and ISR Implementation Architecture
 
 #### 1. Home Page Featured Products (`/`)
-- **Server Component**: [`src/app/page.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/app/page.tsx) is an asynchronous Server Component that fetches the top 8 products server-side using `productApiService.getProducts({ Page: 1, PageSize: 8 }, { next: { revalidate: 60 } })`.
-- **Eliminated Client Waterfall**: The client carousel component ([`FeaturedCarousel.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/components/products/FeaturedCarousel.tsx)) receives `initialProducts` as a prop and renders immediately without initiating a client-side `useEffect` network request.
+- **Server Component**: `src/app/page.tsx` is an asynchronous Server Component that fetches the top 8 products server-side using `productApiService.getProducts({ Page: 1, PageSize: 8 }, { next: { revalidate: 60 } })`.
+- **Eliminated Client Waterfall**: The client carousel component (`src/components/products/FeaturedCarousel.tsx`) receives `initialProducts` as a prop and renders immediately without initiating a client-side `useEffect` network request.
 - **Prerendered with ISR**: Configured segment-level `export const revalidate = 60;`. Next.js prerenders the Home page at build time (`○ /` with `Revalidate 1m Expire 1y`).
 
 #### 2. Product Details Page ISR (`/products/[id]`)
 - **`generateStaticParams()`**: Queries the upstream API at build time to statically generate HTML for the top 20 known product IDs (`/products/1`, `/products/2`, etc.).
 - **60-Second Background Revalidation**: Segment-level `export const revalidate = 60;` applies the Stale-While-Revalidate caching strategy. The first visitor after 60 seconds is served the cached page instantly while Next.js triggers a background revalidation to query the API and update the cache for future visitors.
 - **On-Demand Generation (`export const dynamicParams = true;`)**: Products not pre-rendered at build time are generated on-demand upon first visit, served to the user, and immediately added to the ISR cache for subsequent requests.
-- **Error Boundaries**: Dedicated error boundary ([`src/app/products/[id]/error.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/app/products/[id]/error.tsx)) and 404 page ([`src/app/products/[id]/not-found.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/app/products/[id]/not-found.tsx)) handle failures cleanly without dummy fallbacks.
+- **Error Boundaries**: Dedicated error boundary (`src/app/products/[id]/error.tsx`) and 404 page (`src/app/products/[id]/not-found.tsx`) handle failures cleanly without dummy fallbacks.
 
 #### 3. Product Listing Shell & Catalog (`/products`)
-- **Statically Cached Shell**: The store layout ([`src/app/(store)/layout.tsx`](file:///c:/CustomApps/NextJs/Next-Assignment-AFDP/src/app/(store)/layout.tsx)) pre-renders the page heading, breadcrumbs, sidebar categories, and brand filters with 60-second ISR caching.
+- **Statically Cached Shell**: The store layout (`src/app/(store)/layout.tsx`) pre-renders the page heading, breadcrumbs, sidebar categories, and brand filters with 60-second ISR caching.
 - **Dynamic Query Filtering**: Dynamic URL search parameters (`?search=...&categoryId=...&page=...`) are rendered on-demand on the server with underlying API requests cached per query in the Next.js Data Cache.
 
 ---
@@ -384,32 +393,237 @@ Because all state lives in the URL query string:
 
 ### 🖥️ Verified Next.js Production Build Output
 
-Running `npm run build` generates the complete production route matrix:
+Running `npm run build` compiles with zero TypeScript, routing, or linting errors:
 
 ```text
-Route (app)             Revalidate  Expire
-┌ ○ /                           1m      1y
-├ ○ /_not-found
-├ ○ /about
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env
+✓ Running next.config.ts took 66ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.5s
+  Running TypeScript ...
+  Finished TypeScript in 3.7s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/31) ...
+✓ Generating static pages using 7 workers (31/31) in 2.2s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /about
 ├ ƒ /api/products
 ├ ƒ /api/products/[id]
-├ ○ /login
+├ ƒ /checkout
+├ ƒ /login
+├ ƒ /orders
 ├ ƒ /products
-├   /products/[id]
-│ ├ ● /products/1               1m      1y
-│ ├ ● /products/2               1m      1y
-│ ├ ● /products/3               1m      1y
-│ └ ● [+17 more paths]
-└ ○ /register
+├ ƒ /products/[id]
+└ ƒ /register
 
-○  (Static)   prerendered as static content
-●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ Proxy (Middleware)
+
 ƒ  (Dynamic)  server-rendered on demand
 ```
 
-- `○ /`: Home Page statically pre-rendered with 60-second ISR.
-- `● /products/[id]`: Product Details pre-renders 20 static product pages with 60-second ISR, generating new product IDs on-demand (`dynamicParams = true`).
-- `ƒ /products`: Product Catalog dynamically renders on-demand to process combined URL search, filter, and pagination parameters, backed by Next.js Data Cache.
+- **Root Session SSR**: Root layout accesses session cookies on the server (`await getSession()`), enabling instant user menu hydration without client layout shifts or flashes of unauthenticated content.
+- **Edge Proxy (`src/proxy.ts`)**: Registered as the edge proxy/interceptor (`ƒ Proxy (Middleware)`), running before route handlers and pages.
+- **Protected Routes**: `/checkout` and `/orders` execute dynamic server rendering with session checks.
+- **Data Caching & ISR**: Dynamic queries (`/products`) and product detail ISR (`/products/[id]`) remain backed by the Next.js Data Cache.
+
+---
+
+## 🔐 Assignment 7: Authentication Flow
+
+### Objectives
+- Implement secure, end-to-end user authentication using Next.js 16 App Router paradigms and React 19 Server Actions.
+- Integrate directly with the live Azure backend authentication endpoints:
+  - `POST /api/v1/Customers/login`
+  - `POST /api/v1/Customers/register`
+  - `POST /api/v1/Customers/refresh-token`
+  - `POST /api/v1/Customers/logout`
+- Store access and refresh tokens exclusively in secure, `HttpOnly`, `SameSite=Lax` cookies, preventing cross-site scripting (XSS) token theft.
+- Implement proactive token renewal (`getValidAccessToken`) for server-side callers, keeping it strictly isolated from public Server Action entry points.
+- Refactor authentication forms into focused Client Component islands (`LoginForm.tsx` and `RegisterForm.tsx`) using React 19's `useActionState`.
+- Enforce strict client-side and server-side validation (stricter name checking, email format regex, complex password requirements, and confirmation matching).
+- Guarantee return URL preservation across both login and registration flows, with strict open-redirect sanitization (`sanitizeReturnUrl`).
+- Achieve full UI and UX parity with the original React application:
+  - Header profile button with initial letter circle or fallback icon (`bg-orange/15 border border-orange/40 text-orange font-bold`).
+  - First name display in the navigation bar (`user.name.split(" ")[0]`).
+  - Caret toggle (`▲` / `▼`) with a click-outside profile dropdown (`#header-profile-dropdown`).
+  - Dropdown menu displaying Full Name, Role badge (`CUSTOMER` / `ADMIN`), "My Orders" link (`/orders`), and red "Sign Out" button (`#header-logout-button`) with FontAwesome `faRightFromBracket`.
+  - Unauthenticated "Sign In" link (`#header-sign-in-link`) with `faRightToBracket`.
+  - Responsive mobile drawer parity reflecting the authenticated user's avatar, name, role badge, and working Sign Out action.
+  - Industry-standard password visibility toggle using inline `faEye` and `faEyeSlash` icons inside password input fields.
+
+---
+
+### 🏛️ Authentication Architecture & Cookie Session Model
+
+```
+[Browser / Client Component]
+       │
+       ▼ (1) Submits FormData via useActionState
+[Server Actions: authActions.ts]
+       │
+       ├─► (2) Sanitizes inputs & validates constraints
+       │
+       ├─► (3) Calls authApiService.ts (Server-to-Server HTTPS)
+       │         │
+       │         ▼
+       │     [.NET Azure API: /api/v1/Customers/...]
+       │
+       ▼ (4) Dispatches secure HttpOnly cookies via next/headers
+[Browser Cookies Storage: access_token, refresh_token, auth_user]
+       │
+       ▼ (5) Redirects user to sanitized returnUrl or /login
+```
+
+#### 1. Cookie Storage Strategy (`src/lib/session.ts`)
+
+Instead of storing JWTs in browser `localStorage` or `sessionStorage` (which are vulnerable to XSS attacks), all session state is maintained across three independent cookies configured with strict security flags:
+
+| Cookie Name | Purpose | Expiration | Security Flags |
+| :--- | :--- | :--- | :--- |
+| `access_token` | JWT bearer token for authenticating upstream API requests. | 1 hour | `HttpOnly; SameSite=Lax; Path=/; Secure` |
+| `refresh_token` | Long-lived token used to renew expired access tokens. | 7 days | `HttpOnly; SameSite=Lax; Path=/; Secure` |
+| `auth_user` | Serialized JSON containing user metadata (`customerId`, `name`, `role`, `email`). | 7 days | `HttpOnly; SameSite=Lax; Path=/; Secure` |
+
+- **`createSession(accessToken, refreshToken, user)`**: Sets all three cookies simultaneously upon successful login.
+- **`getSession()`**: Reads cookies server-side and returns a strongly-typed `SessionData` object (`{ user, accessToken, isAuthenticated }`).
+- **`deleteSession()`**: Deletes all three cookies upon logout or session invalidation.
+
+#### 2. Architectural Separation: Server Actions vs. Internal Helpers
+
+In Next.js, every function exported from a file marked with `"use server"` is automatically exposed as a public HTTP endpoint callable by clients. 
+
+To prevent security vulnerabilities:
+- **`src/app/actions/authActions.ts`**: Contains only functions intended to be invoked by client forms (`loginAction`, `registerAction`, `logoutAction`).
+- **`src/lib/auth.ts`**: Contains internal server utilities such as `getValidAccessToken()`. This proactive token renewal function refreshes expired access tokens using the refresh token before invoking protected backend services, but is never exposed as a public Server Action endpoint.
+
+#### 3. Open-Redirect Sanitization & Return URL Flow
+
+To prevent attackers from crafting phishing links that redirect users to malicious external domains after authenticating (e.g., `/login?returnUrl=https://evil.com`), all return URLs are processed through `sanitizeReturnUrl()`:
+
+```typescript
+export function sanitizeReturnUrl(url?: string | null): string {
+    if (!url || typeof url !== "string") return "/";
+    const trimmed = url.trim();
+    if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.includes("\\")) {
+        return "/";
+    }
+    return trimmed;
+}
+```
+
+- **Login Flow**: If an unauthenticated user attempts to visit `/checkout`, the proxy redirects to `/login?returnUrl=%2Fcheckout`. `LoginForm.tsx` maintains the target in a hidden form input. Upon successful credential verification, `loginAction` redirects directly to `/checkout`.
+- **Registration Flow**: If a new user lands on `/register?returnUrl=%2Fcheckout`, `RegisterForm.tsx` captures the return URL in a hidden input. When registration succeeds, `registerAction` redirects to `/login?registered=true&returnUrl=%2Fcheckout`, ensuring the original destination is preserved across the entire onboarding lifecycle.
+
+#### 4. UI / UX Parity: Profile Dropdown & Mobile Drawer
+
+1. **Avatar Circle**: Displays `{user.name ? user.name.charAt(0).toUpperCase() : "👤"}` styled with `bg-orange/15 border border-orange/40 text-orange font-bold font-display text-sm`.
+2. **First Name & Caret**: Header displays `user.name.split(" ")[0]` accompanied by a `▲` / `▼` toggle caret.
+3. **Click-Outside Menu**: Managed by `src/components/layout/HeaderUserMenu.tsx`. Clicking outside the dropdown automatically closes the menu.
+4. **Dropdown Actions**: Contains user details, role badge (`CUSTOMER`), direct link to "My Orders" (`/orders`), and a red "Sign Out" button (`#header-logout-button`) triggering server-side logout.
+5. **Mobile Drawer**: Slide-out mobile menu cleanly renders the user badge, name, role, and logout button on screen widths `<768px`.
+6. **Password Visibility**: Text "Show / Hide" buttons were replaced with standard interactive FontAwesome `faEye` and `faEyeSlash` icons positioned inside the password input fields.
+
+---
+
+## 🛡️ Assignment 8: Proxy (Route Protection & Execution Logging)
+
+### Objectives
+- Implement request interception and edge route protection using Next.js 16's official `src/proxy.ts` convention (replacing deprecated `middleware.ts`).
+- Enforce strict route guards on designated private routes: **exclusively `/checkout` and `/orders` (and subpaths)**.
+- Unauthenticated requests to protected routes must be intercepted and redirected to `/login?returnUrl=<encodedPath>`.
+- Authenticated visitors navigating to auth routes (`/login`, `/register`) must be automatically redirected to their destination `returnUrl` or root (`/`).
+- Measure and log the execution duration of every intercepted request in server logs: `[Proxy] <METHOD> <PATH> - <DURATION>ms (<STATUS>)`.
+- Prevent redirect ping-pong loops by ensuring the proxy and session manager share a single source of truth for authentication status.
+- Implement defense-in-depth on protected stub pages (`/checkout` and `/orders`) with server-side session checks and informative status cards.
+
+---
+
+### ⚙️ Next.js 16 Proxy Architecture (`src/proxy.ts`)
+
+In Next.js 16, the legacy `middleware.ts` naming convention was deprecated in favor of `src/proxy.ts`. Our application exports the standard `proxy` interceptor:
+
+```typescript
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+export function proxy(request: NextRequest) {
+    const startTime = performance.now();
+    const { pathname, search } = request.nextUrl;
+    
+    // Auth status derived from access token cookie
+    const hasAuth = Boolean(request.cookies.get(COOKIE_ACCESS_TOKEN)?.value);
+    
+    // Route matching & redirection logic
+    ...
+    
+    // High-resolution execution timing logging
+    const duration = (performance.now() - startTime).toFixed(2);
+    console.log(`[Proxy] ${request.method} ${pathname} - ${duration}ms (${response.status})`);
+    
+    return response;
+}
+```
+
+#### Route Interception Workflow
+
+```
+[Incoming HTTP Request]
+          │
+          ▼
+   [src/proxy.ts] ───► Starts performance.now()
+          │
+   ┌──────┴───────────────────────────────────────────────────────┐
+   │ Check Authentication Status (COOKIE_ACCESS_TOKEN)             │
+   └──────┬───────────────────────────────────────────────────────┘
+          │
+   Is path /checkout/* or /orders/* ?
+   ├─► YES & NOT Authenticated ──► Redirect to /login?returnUrl=<path>
+   │
+   Is path /login or /register ?
+   ├─► YES & Authenticated ──────► Redirect to sanitized returnUrl or /
+   │
+   Other public routes (/, /about, /products, /api/*)
+   └─► YES ──────────────────────► Pass through (NextResponse.next())
+          │
+          ▼
+   Calculates duration = (now - startTime).toFixed(2)ms
+   Emits log: [Proxy] GET /orders - 0.42ms (307)
+          │
+          ▼
+   [Final HTTP Response / Next.js Page Server]
+```
+
+#### Key Implementation Highlights:
+
+1. **Explicit Route Boundaries**:
+   Route protection is strictly confined to `/checkout` and `/orders` (and their respective subpaths). Public pages (`/`, `/about`, `/products`, `/products/:id`, `/api/products`) remain globally accessible.
+2. **Single Source of Truth**:
+   Both `src/proxy.ts` and `src/lib/session.ts` derive authentication state directly from `COOKIE_ACCESS_TOKEN`. This prevents subtle authentication mismatches where one subsystem considers a user logged in while the other redirects, eliminating infinite redirect loops.
+3. **Execution Timing & Logging**:
+   Every request handled by the proxy records execution duration with sub-millisecond precision. Typical log outputs demonstrate ultra-fast edge interception:
+   ```text
+   [Proxy] GET /orders - 0.38ms (307)
+   [Proxy] GET /login?returnUrl=%2Forders - 0.22ms (200)
+   [Proxy] GET /checkout - 0.41ms (307)
+   [Proxy] GET / - 0.19ms (200)
+   ```
+4. **Optimized Route Matcher**:
+   Static files, images, icons, and fonts are excluded from proxy execution using the Next.js negative-lookahead matcher regex:
+   ```typescript
+   export const config = {
+       matcher: [
+           "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|otf|ttf|woff|woff2)$).*)",
+       ],
+   };
+   ```
+5. **Defense-in-Depth Stub Pages**:
+   Even with proxy guards active, `src/app/checkout/page.tsx` and `src/app/orders/page.tsx` perform secondary server-side session checks (`await getSession()`). They render an informative *"Feature Not Configured Yet"* status banner, display verified session credentials (Customer ID, Full Name, Role, Email), and offer direct navigation back to the product catalog.
 
 ---
 
@@ -432,11 +646,17 @@ src/
 │   │       └── page.tsx              # Product catalog (Server Component)
 │   ├── about/
 │   │   └── page.tsx
+│   ├── actions/
+│   │   └── authActions.ts            # Server Actions: loginAction, registerAction, logoutAction
 │   ├── api/
 │   │   └── products/
 │   │       ├── route.ts              # GET (list + pagination), POST (create)
 │   │       └── [id]/
 │   │           └── route.ts          # GET (detail), PUT (update), DELETE (remove)
+│   ├── checkout/
+│   │   └── page.tsx                  # Protected checkout stub (Server Component)
+│   ├── orders/
+│   │   └── page.tsx                  # Protected orders history stub (Server Component)
 │   ├── products/
 │   │   └── [id]/
 │   │       ├── error.tsx             # Detail error boundary
@@ -449,6 +669,9 @@ src/
 ├── components/
 │   ├── about/
 │   │   └── AboutCard.tsx
+│   ├── auth/
+│   │   ├── LoginForm.tsx             # Client Component: login form with useActionState
+│   │   └── RegisterForm.tsx          # Client Component: registration form with validation
 │   ├── common/
 │   │   ├── Arrow.tsx
 │   │   ├── Breadcrumb.tsx
@@ -459,6 +682,7 @@ src/
 │   ├── layout/
 │   │   ├── Footer.tsx
 │   │   ├── Header.tsx
+│   │   ├── HeaderUserMenu.tsx        # Client Component: user dropdown, initials avatar & logout
 │   │   ├── Hero.tsx
 │   │   └── Sidebar.tsx
 │   └── products/
@@ -479,11 +703,17 @@ src/
 │   └── products.json
 ├── hooks/
 │   └── useDebounce.ts                # Generic 300ms debouncing hook for search input
+├── lib/
+│   ├── auth.ts                       # Proactive access token renewal helper (internal)
+│   └── session.ts                    # HttpOnly cookie session manager
+├── proxy.ts                          # Next.js 16 Proxy: route protection & duration logging
 ├── services/
 │   ├── apiClient.ts                  # Resilient HTTP request utility with status tracking
+│   ├── authApiService.ts             # Server-side Azure auth communication service
 │   └── productApiServices.ts         # Server-only .NET API communication service
 ├── types/
 │   ├── api.ts                        # ApiResult with HTTP status codes
+│   ├── auth.ts                       # Auth credentials, User, Session, and Action state definitions
 │   ├── button.ts
 │   ├── card.ts
 │   ├── filterPropTypes.ts
@@ -538,4 +768,24 @@ src/
 - [x] **Zero Mock Data Fallback**: Real API data with graceful error boundary recovery and dedicated 404 pages.
 - [x] **Documented Comparison**: Exhaustive comparison table comparing traditional React client-side fetching to Next.js SSG/ISR across 11 key performance, SEO, and UX metrics.
 - [x] **Verified Production Build**: Full build output captured and documented (`○`, `●`, `ƒ`).
+
+### Assignment 7: Authentication Flow
+- [x] **Server Actions for Auth**: `loginAction`, `registerAction`, and `logoutAction` with React 19 `useActionState`.
+- [x] **Secure HttpOnly Cookie Sessions**: `access_token` (1h), `refresh_token` (7d), and `auth_user` (7d) cookies with `SameSite=Lax`, `Path=/`, and `secure: true`.
+- [x] **Real Backend Azure API Integration**: Tested against live endpoints for login, registration, token refresh, and logout.
+- [x] **Proactive Token Refresh**: Dedicated `getValidAccessToken()` helper isolated outside `"use server"` action exports.
+- [x] **Strict Form Validation**: Name (min 2 chars), email regex, 8+ char complex password, and confirmation equality checking.
+- [x] **Open-Redirect Sanitization & Return URL**: `sanitizeReturnUrl()` prevents open redirect attacks; target path preserved across login and registration.
+- [x] **Password Visibility Eye Toggles**: Replaced text buttons with interactive inline `faEye` and `faEyeSlash` icons.
+- [x] **Header UI Parity & User Menu**: Initial avatar circle, user first name, caret indicator, click-outside dropdown, orders link, and red logout button.
+- [x] **Responsive Mobile Drawer Parity**: Mobile slide-out drawer reflects user avatar, name, role badge, and working logout action.
+
+### Assignment 8: Proxy (Route Protection & Execution Logging)
+- [x] **Next.js 16 Proxy Migration**: Implemented in `src/proxy.ts` using `export function proxy(request: NextRequest)`.
+- [x] **Route Protection for `/checkout` and `/orders`**: Exclusively guards `/checkout` and `/orders` (and subpaths); unauthenticated visitors redirected to `/login?returnUrl=...`.
+- [x] **Return URL Forwarding**: Preserves origin path in URL query parameters, automatically navigating back after authentication.
+- [x] **Auth Page Redirect Bypass**: Authenticated users visiting `/login` or `/register` are redirected to their destination or `"/"`.
+- [x] **Execution Duration Logging**: High-resolution `[Proxy] <METHOD> <PATH> - <DURATION>ms (<STATUS>)` logged for every intercepted request.
+- [x] **Single Source of Auth Truth**: Synchronized on `COOKIE_ACCESS_TOKEN` across `proxy.ts` and `session.ts` to prevent redirect loops.
+- [x] **Defense-in-Depth Protected Pages**: `/checkout` and `/orders` verify session server-side, rendering status banners and verified user details.
 
