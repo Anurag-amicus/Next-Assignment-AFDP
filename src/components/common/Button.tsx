@@ -10,7 +10,7 @@ function Button({
     onClick,
     className = "",
     type = "button",
-    form = "",
+    form,
 }: ButtonProps) {
     const variantClasses = {
         primary:
@@ -30,14 +30,13 @@ function Button({
     };
 
     const handleClick = () => {
-        console.log(`${children} button was clicked`);
         onClick?.();
     };
 
     return (
         <button
             type={type}
-            form={form}
+            form={form || undefined}
             className={cn(
                 "w-61.25 h-16 rounded text-lg font-semibold tracking-wide cursor-pointer font-sans transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
                 variantClasses[variant],

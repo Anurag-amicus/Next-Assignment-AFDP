@@ -9,75 +9,86 @@ import {
     faMagnifyingGlass,
     faCartShopping,
     faRightToBracket,
-    faXmark,
+    faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { useDebounce } from "@/hooks/useDebounce";
+import { logoutAction } from "@/app/actions/authActions";
+import HeaderUserMenu from "./HeaderUserMenu";
+import type { User } from "@/types/auth";
 
 export interface HeaderProps {
+    initialUser?: User | null;
     cartCount?: number;
+    searchTerm?: string;
+    onSearchChange?: (value: string) => void;
 }
 
-export default function Header({ cartCount = 3 }: HeaderProps) {
+export default function Header({
+    initialUser = null,
+    cartCount = 0,
+    searchTerm,
+    onSearchChange,
+}: HeaderProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const currentSearch = searchParams.get("search") || "";
-    const [searchValue, setSearchValue] = useState(currentSearch);
-    const [prevSearchParam, setPrevSearchParam] = useState(currentSearch);
-    const [prevPathname, setPrevPathname] = useState(pathname);
+    const user = initialUser;
+
+    const isProductListingPage = pathname === "/products";
+    const queryParam = searchParams.get("search") || "";
+    const targetValue = searchTerm ?? (isProductListingPage ? queryParam : "");
+
+    const [searchValue, setSearchValue] = useState(targetValue);
+    const [prevTargetValue, setPrevTargetValue] = useState(targetValue);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    // React 19 pattern: adjust state during render when external URL search param or route changes
-    if (pathname !== prevPathname || (pathname === "/products" && prevSearchParam !== currentSearch)) {
-        setPrevPathname(pathname);
-        setPrevSearchParam(currentSearch);
-        if (pathname === "/products") {
-            setSearchValue(currentSearch);
-        }
+    if (targetValue !== prevTargetValue) {
+        setPrevTargetValue(targetValue);
+        setSearchValue(targetValue);
     }
 
     const debouncedSearch = useDebounce(searchValue, 300);
 
-    // Apply debounced search navigation ONLY when currently on /products
     useEffect(() => {
-        if (pathname === "/products") {
-            const trimmed = debouncedSearch.trim();
-            if (trimmed !== currentSearch) {
-                const params = new URLSearchParams(searchParams.toString());
-                if (trimmed) {
-                    params.set("search", trimmed);
-                } else {
-                    params.delete("search");
-                }
-                params.delete("page"); // Reset pagination on search change
-                const query = params.toString();
-                router.push(`/products${query ? `?${query}` : ""}`);
+        if (!isProductListingPage) return;
+
+        const currentSearch = searchParams.get("search") || "";
+        const nextSearch = debouncedSearch.trim();
+
+        if (currentSearch !== nextSearch) {
+            const nextParams = new URLSearchParams(searchParams.toString());
+            if (nextSearch) {
+                nextParams.set("search", nextSearch);
+            } else {
+                nextParams.delete("search");
             }
+            nextParams.delete("page");
+            const query = nextParams.toString();
+            router.push(`/products${query ? `?${query}` : ""}`);
         }
-    }, [debouncedSearch, pathname, currentSearch, router, searchParams]);
+    }, [debouncedSearch, isProductListingPage, searchParams, router]);
 
     const handleSearchSubmit = (event: React.FormEvent) => {
         event.preventDefault();
         const trimmed = searchValue.trim();
-        if (pathname === "/products") {
-            const params = new URLSearchParams(searchParams.toString());
+        if (isProductListingPage) {
+            const nextParams = new URLSearchParams(searchParams.toString());
             if (trimmed) {
-                params.set("search", trimmed);
+                nextParams.set("search", trimmed);
             } else {
-                params.delete("search");
+                nextParams.delete("search");
             }
-            params.delete("page");
-            const query = params.toString();
+            nextParams.delete("page");
+            const query = nextParams.toString();
             router.push(`/products${query ? `?${query}` : ""}`);
         } else {
-            // When on other pages, submit navigates to /products?search=...
-            if (trimmed) {
-                router.push(`/products?search=${encodeURIComponent(trimmed)}`);
-            } else {
-                router.push("/products");
-            }
+            router.push(trimmed ? `/products?search=${encodeURIComponent(trimmed)}` : "/products");
         }
+    };
+
+    const handleLogout = async () => {
+        await logoutAction();
     };
 
     const isActive = (href: string) => {
@@ -85,17 +96,17 @@ export default function Header({ cartCount = 3 }: HeaderProps) {
         return pathname === href || pathname.startsWith(`${href}/`);
     };
 
-    const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-        `flex items-center whitespace-nowrap text-sm font-semibold leading-none no-underline transition-all duration-200 ${isActive
-            ? "text-orange font-bold relative after:absolute after:-bottom-1.5 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
-            : "text-muted hover:text-orange"
+    const navLinkClass = ({ active }: { active: boolean }) =>
+        `flex items-center whitespace-nowrap text-sm font-semibold leading-none no-underline transition-all duration-200 ${
+            active
+                ? "text-orange font-bold relative after:absolute after:-bottom-1.5 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
+                : "text-muted hover:text-orange"
         }`;
 
     return (
-        <header className="w-full border-b border-border bg-white sticky top-0 z-40">
+        <header className="w-full border-b border-border bg-white sticky top-0 z-40 overflow-x-clip">
             <div className="w-full bg-white px-7 py-3 max-[1100px]:px-5 max-[768px]:px-4 max-[600px]:px-3 max-[600px]:py-2.5">
                 <div className="flex items-center w-full min-h-12 max-[600px]:min-h-10">
-                    {/* Hamburger Button for Mobile */}
                     <button
                         type="button"
                         aria-label="Toggle navigation menu"
@@ -105,14 +116,13 @@ export default function Header({ cartCount = 3 }: HeaderProps) {
                     >
                         <Image
                             src="/burger-menu-svgrepo-com.svg"
-                            alt="Menu"
+                            alt=""
                             width={28}
                             height={28}
                             className="w-7 h-auto max-[768px]:w-6 max-[600px]:w-5.5"
                         />
                     </button>
 
-                    {/* Brand Logo */}
                     <Link
                         href="/"
                         className="flex w-45 shrink-0 flex-col justify-center border-l border-border-dark pl-4.5 leading-none no-underline max-[1100px]:w-40 max-[768px]:w-auto max-[768px]:pl-2.5 max-[600px]:pl-2"
@@ -125,7 +135,6 @@ export default function Header({ cartCount = 3 }: HeaderProps) {
                         </span>
                     </Link>
 
-                    {/* Desktop / Tablet Search Form */}
                     <form
                         id="search-products"
                         onSubmit={handleSearchSubmit}
@@ -137,7 +146,10 @@ export default function Header({ cartCount = 3 }: HeaderProps) {
                             placeholder="Search Products..."
                             aria-label="Search Products"
                             value={searchValue}
-                            onChange={(event) => setSearchValue(event.target.value)}
+                            onChange={(event) => {
+                                setSearchValue(event.target.value);
+                                onSearchChange?.(event.target.value);
+                            }}
                             className="min-w-0 flex-1 border-0 bg-transparent px-3.5 text-sm text-black outline-none placeholder:text-subtle"
                         />
                         <button
@@ -152,158 +164,171 @@ export default function Header({ cartCount = 3 }: HeaderProps) {
                         </button>
                     </form>
 
-                    {/* Navigation Links */}
                     <nav
-                        className="ml-auto flex shrink-0 items-center gap-4 max-[1100px]:gap-3 max-[768px]:gap-2"
+                        className="ml-auto flex shrink-0 items-center gap-6 max-[1100px]:gap-4 max-[768px]:gap-3"
                         aria-label="Main navigation"
                     >
                         <Link
                             href="/"
-                            className={`${navLinkClass({ isActive: isActive("/") })} max-[768px]:hidden`}
+                            className={`${navLinkClass({ active: isActive("/") })} max-[768px]:hidden`}
                         >
                             Home
                         </Link>
 
                         <Link
                             href="/products"
-                            className={`${navLinkClass({ isActive: isActive("/products") })} max-[768px]:hidden`}
+                            className={`${navLinkClass({ active: isActive("/products") })} max-[768px]:hidden`}
                         >
                             Products
                         </Link>
 
                         <Link
                             href="/about"
-                            className={`${navLinkClass({ isActive: isActive("/about") })} max-[768px]:hidden`}
+                            className={`${navLinkClass({ active: isActive("/about") })} max-[768px]:hidden`}
                         >
                             About
                         </Link>
 
-                        {/* Sign In Link */}
-                        <Link
-                            href="/login"
-                            className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-charcoal hover:text-orange transition-colors px-2.5 py-1.5"
-                        >
-                            <span>Sign In</span>
-                            <FontAwesomeIcon icon={faRightToBracket} className="text-sm" />
-                        </Link>
-
-                        {/* Cart Link */}
                         <Link
                             href="/cart"
-                            className="relative flex items-center justify-center p-2 text-charcoal hover:text-orange transition-colors"
+                            className={`group relative flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold leading-none no-underline transition-colors duration-200 pr-1.5 ${
+                                isActive("/cart")
+                                    ? "text-orange font-bold relative after:absolute after:-bottom-1.5 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
+                                    : "text-muted hover:text-orange"
+                            }`}
                             aria-label={`Shopping cart with ${cartCount} items`}
                         >
-                            <FontAwesomeIcon icon={faCartShopping} className="text-lg" />
-                            {cartCount > 0 && (
-                                <span className="absolute -top-0.5 -right-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-orange px-1 text-[10px] font-bold text-white leading-none">
+                            <div className="relative flex items-center justify-center">
+                                <FontAwesomeIcon
+                                    icon={faCartShopping}
+                                    className="text-base leading-none transition-transform duration-200 group-hover:scale-110"
+                                />
+                                <span
+                                    id="cart-item-badge"
+                                    className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange px-1 font-display text-[10px] font-bold text-white shadow-xs leading-none max-[600px]:h-3.5 max-[600px]:min-w-3.5 max-[600px]:text-[9px]"
+                                >
                                     {cartCount}
                                 </span>
-                            )}
+                            </div>
+                            <span className="max-[768px]:hidden">Cart</span>
                         </Link>
+
+                        <HeaderUserMenu user={user} onLogout={handleLogout} />
                     </nav>
                 </div>
 
-                {/* Mobile Search Bar (<600px) */}
                 <form
                     onSubmit={handleSearchSubmit}
-                    className="mt-2.5 flex min-[600px]:hidden h-9 w-full items-stretch overflow-hidden rounded-sm border border-border-dark bg-white"
+                    className="mt-2.5 flex h-9 w-full min-w-0 items-stretch overflow-hidden rounded-sm border border-border-dark bg-white transition-[border-color,box-shadow] duration-200 focus-within:border-orange focus-within:ring-2 focus-within:ring-orange/20 min-[600px]:hidden"
                 >
                     <input
-                        name="mobile-search"
+                        name="searchbar"
                         type="text"
                         placeholder="Search products..."
+                        aria-label="Search products"
                         value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                        className="min-w-0 flex-1 border-0 bg-transparent px-3 text-xs text-black outline-none"
+                        onChange={(event) => {
+                            setSearchValue(event.target.value);
+                            onSearchChange?.(event.target.value);
+                        }}
+                        className="w-full min-w-0 flex-1 border-0 bg-transparent px-3 text-xs text-black outline-none placeholder:text-subtle"
                     />
                     <button
                         type="submit"
                         aria-label="Search"
-                        className="flex h-full w-9 shrink-0 items-center justify-center border-0 bg-transparent p-0 text-orange"
+                        className="flex h-full w-9 shrink-0 cursor-pointer items-center justify-center border-0 bg-transparent p-0"
                     >
-                        <FontAwesomeIcon icon={faMagnifyingGlass} className="text-xs" />
+                        <FontAwesomeIcon
+                            icon={faMagnifyingGlass}
+                            className="text-sm text-orange"
+                        />
                     </button>
                 </form>
             </div>
 
-            {/* Mobile Navigation Drawer */}
             {mobileMenuOpen && (
-                <div className="min-[769px]:hidden fixed inset-0 z-50 flex">
-                    <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+                <div
+                    id="mobile-navigation-menu"
+                    className="w-full border-t border-border bg-white px-5 py-3 min-[769px]:hidden flex flex-col gap-2.5 shadow-xs"
+                >
+                    <Link
+                        href="/"
                         onClick={() => setMobileMenuOpen(false)}
-                    />
-                    <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white p-6 shadow-xl">
-                        <div className="flex items-center justify-between pb-4 border-b border-border">
-                            <span className="font-display text-xl font-bold text-charcoal">
-                                MENU
-                            </span>
+                        className={`text-sm font-semibold py-1.5 no-underline transition-colors ${
+                            isActive("/") ? "text-orange font-bold pl-2 border-l-2 border-orange" : "text-muted hover:text-orange"
+                        }`}
+                    >
+                        Home
+                    </Link>
+
+                    <Link
+                        href="/products"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`text-sm font-semibold py-1.5 no-underline transition-colors ${
+                            isActive("/products") ? "text-orange font-bold pl-2 border-l-2 border-orange" : "text-muted hover:text-orange"
+                        }`}
+                    >
+                        Products
+                    </Link>
+
+                    <Link
+                        href="/orders"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`text-sm font-semibold py-1.5 no-underline transition-colors ${
+                            isActive("/orders") ? "text-orange font-bold pl-2 border-l-2 border-orange" : "text-muted hover:text-orange"
+                        }`}
+                    >
+                        Orders
+                    </Link>
+
+                    <Link
+                        href="/cart"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`text-sm font-semibold py-1.5 no-underline transition-colors flex items-center gap-2 ${
+                            isActive("/cart") ? "text-orange font-bold pl-2 border-l-2 border-orange" : "text-muted hover:text-orange"
+                        }`}
+                    >
+                        <FontAwesomeIcon icon={faCartShopping} className="text-sm" />
+                        <span>Cart ({cartCount})</span>
+                    </Link>
+
+                    {user ? (
+                        <div className="border-t border-border pt-2 mt-1 flex flex-col gap-2">
+                            <div className="flex items-center gap-2 py-1">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-orange/15 border border-orange/40 text-orange font-bold text-xs">
+                                    {user.name ? user.name.charAt(0).toUpperCase() : "👤"}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xs font-bold text-charcoal truncate">
+                                        {user.name || "Customer"}
+                                    </span>
+                                    <span className="text-[10px] text-muted uppercase tracking-wider">
+                                        {user.role ? `Role: ${user.role}` : "Active Session"}
+                                    </span>
+                                </div>
+                            </div>
                             <button
                                 type="button"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="p-1 text-muted hover:text-black cursor-pointer border-0 bg-transparent"
-                                aria-label="Close menu"
+                                onClick={() => {
+                                    handleLogout();
+                                    setMobileMenuOpen(false);
+                                }}
+                                className="text-xs font-semibold text-red-600 py-1.5 no-underline text-left border-0 bg-transparent cursor-pointer flex items-center gap-2 hover:text-red-700 transition-colors"
                             >
-                                <FontAwesomeIcon icon={faXmark} className="text-xl" />
+                                <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
+                                <span>Sign Out</span>
                             </button>
                         </div>
-                        <nav className="flex flex-col gap-4 mt-6">
-                            <Link
-                                href="/"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${isActive("/")
-                                    ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
-                                    : "text-charcoal hover:text-orange"
-                                    }`}
-                            >
-                                Home
-                            </Link>
-                            <Link
-                                href="/products"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${isActive("/products")
-                                    ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
-                                    : "text-charcoal hover:text-orange"
-                                    }`}
-                            >
-                                Products
-                            </Link>
-                            <Link
-                                href="/about"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={`text-base font-semibold py-1 transition-all duration-200 w-fit ${isActive("/about")
-                                    ? "text-orange font-bold relative after:absolute after:-bottom-1 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
-                                    : "text-charcoal hover:text-orange"
-                                    }`}
-                            >
-                                About
-                            </Link>
-                            <Link
-                                href="/login"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="text-base font-semibold text-charcoal hover:text-orange py-1 flex items-center gap-1"
-                            >
-                                <FontAwesomeIcon icon={faRightToBracket} />
-                                Sign In
-                            </Link>
-                            <Link
-                                href="/cart"
-                                onClick={() => setMobileMenuOpen(false)}
-                                className="text-base font-semibold text-charcoal hover:text-orange py-2 flex items-center justify-between"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <FontAwesomeIcon icon={faCartShopping} />
-                                    Cart
-                                </span>
-
-                                {cartCount >= 0 && (
-                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange px-1.5 text-xs font-bold text-white leading-none">
-                                        {cartCount}
-                                    </span>
-                                )}
-                            </Link>
-                        </nav>
-                    </div>
+                    ) : (
+                        <Link
+                            href="/login"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-sm font-semibold py-1.5 no-underline text-muted hover:text-orange border-t border-border pt-2 mt-1 flex items-center justify-between"
+                        >
+                            <span>Sign In</span>
+                            <FontAwesomeIcon icon={faRightToBracket} className="text-sm" />
+                        </Link>
+                    )}
                 </div>
             )}
         </header>

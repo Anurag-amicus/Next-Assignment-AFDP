@@ -6,7 +6,6 @@ function CtaCard({
     title,
     description,
     buttonText,
-    icon,
     variant,
     buttonvariant = "primary"
 }: CtaCardProps) {
@@ -15,12 +14,7 @@ function CtaCard({
             variant={variant}
             className="min-w-0 p-0 rounded-xs flex h-full"
         >
-            <div className="flex w-full h-full flex-col items-start px-6 py-7">
-                {icon && (
-                    <div className="mb-3">
-                        {icon}
-                    </div>
-                )}
+            <div className="flex w-full h-full flex-col gap-5 items-start px-6 py-7">
 
                 <h2 className="m-0 text-black font-sans text-3xl font-bold leading-[1.1] tracking-tight">
                     {title}
