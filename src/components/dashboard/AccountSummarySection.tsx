@@ -1,6 +1,7 @@
 import type { User } from "@/types/auth";
 import type { Address } from "@/types/address";
 import { addressApiService } from "@/services/addressApiService";
+import { getSession } from "@/lib/session";
 
 interface AccountSummarySectionProps {
     user: User;
@@ -10,17 +11,21 @@ export default async function AccountSummarySection({ user }: AccountSummarySect
     let addresses: Address[] = [];
     let addressError: string | null = null;
 
-    try {
-        const result = await addressApiService.getAddresses(token);
-        if (result.success && Array.isArray(result.data)) {
-            addresses = result.data;
-        } else if (!result.success) {
-            addressError = result.error || "Unable to load addresses";
-        }
+    const session = await getSession();
+    const token = session.accessToken;
+
+    if (token) {
+        try {
+            const result = await addressApiService.getAddresses(token);
+            if (result.success && Array.isArray(result.data)) {
+                addresses = result.data;
+            } else if (!result.success) {
+                addressError = result.error || "Unable to load addresses";
+            }
         } catch {
             addressError = "Failed to connect to address service";
         }
-
+    }    
 
     const defaultAddress =
         addresses.find((addr) => addr.isDefault) || (addresses.length > 0 ? addresses[0] : null);
