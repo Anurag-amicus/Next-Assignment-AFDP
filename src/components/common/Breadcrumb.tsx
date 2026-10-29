@@ -18,6 +18,7 @@ const SEGMENT_LABELS: Record<string, string> = {
     products: "Products",
     cart: "Shopping Cart",
     orders: "My Orders",
+    dashboard: "Dashboard",
     login: "Sign In",
     about: "About Us",
 };
@@ -58,7 +59,7 @@ export default function Breadcrumb({
     return (
         <nav
             aria-label="Breadcrumb"
-            className={`flex items-center gap-1.5 text-xs leading-none mb-4 ${className}`}
+            className={`flex flex-wrap items-center gap-1.5 text-xs leading-none mb-4 ${className}`}
         >
             {trail.map((item, index) => {
                 const isLast = index === trail.length - 1;

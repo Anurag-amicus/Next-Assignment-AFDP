@@ -271,6 +271,18 @@ export default function Header({
                         Products
                     </Link>
 
+                    {user && (
+                        <Link
+                            href="/dashboard"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`text-sm font-semibold py-1.5 no-underline transition-colors ${
+                                isActive("/dashboard") ? "text-orange font-bold pl-2 border-l-2 border-orange" : "text-muted hover:text-orange"
+                            }`}
+                        >
+                            Dashboard
+                        </Link>
+                    )}
+
                     <Link
                         href="/orders"
                         onClick={() => setMobileMenuOpen(false)}

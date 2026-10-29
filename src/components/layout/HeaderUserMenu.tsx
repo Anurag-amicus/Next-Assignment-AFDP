@@ -84,6 +84,13 @@ export default function HeaderUserMenu({ user, onLogout }: HeaderUserMenuProps) 
 
                     <div className="py-1">
                         <Link
+                            href="/dashboard"
+                            onClick={() => setOpen(false)}
+                            className="flex items-center px-3.5 py-1.5 text-xs text-charcoal hover:bg-orange/10 hover:text-orange no-underline transition-colors"
+                        >
+                            Dashboard
+                        </Link>
+                        <Link
                             href="/orders"
                             onClick={() => setOpen(false)}
                             className="flex items-center px-3.5 py-1.5 text-xs text-charcoal hover:bg-orange/10 hover:text-orange no-underline transition-colors"

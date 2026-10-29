@@ -77,40 +77,6 @@ export async function getSession(): Promise<SessionData> {
 }
 
 /**
- * Reads the raw refresh token on the server for token renewal.
- */
-export async function getRefreshToken(): Promise<string | null> {
-    const cookieStore = await cookies();
-    return cookieStore.get(COOKIE_REFRESH_TOKEN)?.value || null;
-}
-
-/**
- * Updates access token and rotated refresh token after a successful refresh.
- */
-export async function updateSessionTokens(
-    accessToken: string,
-    refreshToken: string
-): Promise<void> {
-    const cookieStore = await cookies();
-
-    cookieStore.set(COOKIE_ACCESS_TOKEN, accessToken, {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: "lax",
-        path: "/",
-        maxAge: ACCESS_TOKEN_MAX_AGE,
-    });
-
-    cookieStore.set(COOKIE_REFRESH_TOKEN, refreshToken, {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: "lax",
-        path: "/",
-        maxAge: REFRESH_TOKEN_MAX_AGE,
-    });
-}
-
-/**
  * Deletes all authentication-related cookies.
  */
 export async function deleteSession(): Promise<void> {

@@ -55,10 +55,13 @@ npm run start
 | `src/app/products/[id]/page.tsx` | **Server** | Dynamic product route; fetches data server-side; generates dynamic SEO metadata. |
 | `src/app/api/products/route.ts` | **Server (Route Handler)** | REST API proxy and transformation wrapper for product list & creation. |
 | `src/app/api/products/[id]/route.ts` | **Server (Route Handler)** | REST API proxy for individual product retrieval, update, and deletion. |
-| `src/proxy.ts` | **Server (Proxy)** | Next.js 16 edge request interceptor; enforces route guards for `/checkout` and `/orders`, logs execution duration. |
+| `src/proxy.ts` | **Server (Proxy)** | Next.js 16 edge request interceptor; enforces route guards for `/checkout`, `/orders`, and `/dashboard`, logs execution duration. |
 | `src/app/actions/authActions.ts` | **Server Action** | Form submission handlers (`loginAction`, `registerAction`, `logoutAction`), open-redirect sanitization, cookie dispatch. |
 | `src/lib/session.ts` | **Server Utility** | Secure HttpOnly cookie session manager (`access_token`, `refresh_token`, `auth_user`). |
 | `src/lib/auth.ts` | **Server Utility** | Proactive token renewal helper for server-side callers, kept decoupled from Server Action exports. |
+| `src/app/dashboard/page.tsx` | **Server** | Protected User Dashboard; composes SSR welcome banner and 2 independent Suspense streaming boundaries. |
+| `src/components/dashboard/AccountSummarySection.tsx` | **Server** | Async Server Component fetching address data; renders profile details and default shipping address with empty state. |
+| `src/components/dashboard/RecentOrdersSection.tsx` | **Server** | Async Server Component fetching paginated orders; renders recent order cards and View All Orders link with empty state. |
 | `src/app/checkout/page.tsx` | **Server** | Protected checkout stub requiring session authentication; renders status banner and verified user details. |
 | `src/app/orders/page.tsx` | **Server** | Protected orders history stub requiring session authentication; renders status banner and verified user details. |
 | `src/components/layout/Footer.tsx` | **Server** | Static trust bar, site map links, and copyright notice. |
@@ -416,6 +419,7 @@ Route (app)
 ├ ƒ /api/products
 ├ ƒ /api/products/[id]
 ├ ƒ /checkout
+├ ƒ /dashboard
 ├ ƒ /login
 ├ ƒ /orders
 ├ ƒ /products
