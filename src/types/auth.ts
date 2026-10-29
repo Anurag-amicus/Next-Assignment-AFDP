@@ -1,9 +1,3 @@
-/**
- * Authentication and Session Types
- * Assignment 7 & 8: Auth Flow & Proxy
- * Following exact React convention
- */
-
 export interface Login {
     email: string;
     password: string;
@@ -27,13 +21,9 @@ export interface RefreshToken {
     refreshToken: string;
 }
 
-// ─── User Model Types ───
-
 export type User = Pick<AuthResponse, "customerId" | "name" | "role"> & {
     email: string;
 };
-
-export type AuthUser = User;
 
 export interface SessionData {
     user: User | null;

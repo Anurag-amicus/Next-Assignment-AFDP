@@ -1,10 +1,7 @@
 import Link from "next/link";
 import type { BackendOrderDetail } from "@/types/order";
 import { orderApiService } from "@/services/orderApiService";
-
-interface RecentOrdersSectionProps {
-    token: string | null;
-}
+import { getSession } from "@/lib/session";
 
 function getStatusBadgeClass(status?: string): string {
     const s = (status || "").toLowerCase();
@@ -23,13 +20,13 @@ function getStatusBadgeClass(status?: string): string {
     return "bg-neutral-50 text-neutral-700 border-neutral-200";
 }
 
-export default async function RecentOrdersSection({ token }: RecentOrdersSectionProps) {
+export default async function RecentOrdersSection() {
     let orders: BackendOrderDetail[] = [];
     let ordersError: string | null = null;
-
-    if (token) {
+    const session = await getSession();
+    if (session.accessToken) {
         try {
-            const result = await orderApiService.getOrderHistory(token);
+            const result = await orderApiService.getOrderHistory(session.accessToken);
             if (result.success && result.data?.orders) {
                 orders = result.data.orders.slice(0, 3);
             } else if (!result.success) {
@@ -89,10 +86,10 @@ export default async function RecentOrdersSection({ token }: RecentOrdersSection
                     {orders.map((order) => {
                         const dateFormatted = order.createdAt
                             ? new Date(order.createdAt).toLocaleDateString(undefined, {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                              })
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                            })
                             : "Recent";
 
                         const itemCount =

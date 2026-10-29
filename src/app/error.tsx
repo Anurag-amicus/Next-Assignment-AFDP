@@ -2,13 +2,9 @@
 
 import { useEffect } from "react";
 import Button from "@/components/common/Button";
+import type { ErrorProps } from "@/types/error";
 
-interface RootErrorProps {
-    error: Error & { digest?: string };
-    reset: () => void;
-}
-
-export default function RootError({ error, reset }: RootErrorProps) {
+export default function RootError({ error, reset }: ErrorProps) {
     useEffect(() => {
         console.error("Root error boundary caught an error:", error);
     }, [error]);

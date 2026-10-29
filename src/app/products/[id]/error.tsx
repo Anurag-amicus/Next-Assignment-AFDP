@@ -3,16 +3,13 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import Button from "@/components/common/Button";
+import type { ErrorProps } from "@/types/error";
 
-interface ProductDetailErrorProps {
-    error: Error & { digest?: string };
-    reset: () => void;
-}
 
 export default function ProductDetailError({
     error,
     reset,
-}: ProductDetailErrorProps) {
+}: ErrorProps) {
     useEffect(() => {
         console.error("Product detail error caught by error boundary:", error);
     }, [error]);

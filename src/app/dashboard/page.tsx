@@ -16,11 +16,9 @@ export const metadata = {
 export default async function DashboardPage() {
     const session = await getSession();
 
-    if (!session.isAuthenticated || !session.user || !session.accessToken) {
+    if (!session.user) {
         redirect("/login?returnUrl=/dashboard");
     }
-
-    const token = session.accessToken;
 
     return (
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-x-hidden min-w-0">
@@ -29,16 +27,15 @@ export default async function DashboardPage() {
             <DashboardWelcomeBanner user={session.user} />
 
             <div className="flex flex-col gap-2">
-                {/* Independent Suspense Boundary 1: Profile & Default Address */}
                 <Suspense fallback={<AccountSummarySkeleton />}>
-                    <AccountSummarySection user={session.user} token={token} />
+                    <AccountSummarySection user={session.user} />
                 </Suspense>
 
-                {/* Independent Suspense Boundary 2: Recent Orders */}
                 <Suspense fallback={<RecentOrdersSkeleton />}>
-                    <RecentOrdersSection token={token} />
+                    <RecentOrdersSection />
                 </Suspense>
             </div>
         </div>
     );
 }
+

@@ -2,13 +2,9 @@
 
 import { useEffect } from "react";
 import Button from "@/components/common/Button";
+import type { ErrorProps } from "@/types/error";
 
-interface ProductsErrorProps {
-    error: Error & { digest?: string };
-    reset: () => void;
-}
-
-export default function ProductsError({ error, reset }: ProductsErrorProps) {
+export default function ProductsError({ error, reset }: ErrorProps) {
     useEffect(() => {
         console.error("Products catalog error caught by error boundary:", error);
     }, [error]);

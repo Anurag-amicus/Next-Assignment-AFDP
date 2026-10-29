@@ -15,7 +15,7 @@ const COOKIE_BASE = { httpOnly: true, secure: true, sameSite: "lax" as const, pa
 export async function proxy(request: NextRequest): Promise<NextResponse> {
     const start = performance.now();
     const { pathname, search } = request.nextUrl;
-    let accessToken = request.cookies.get(COOKIE_ACCESS_TOKEN)?.value;
+    const accessToken = request.cookies.get(COOKIE_ACCESS_TOKEN)?.value;
     const refreshToken = request.cookies.get(COOKIE_REFRESH_TOKEN)?.value;
 
     const log = (response: NextResponse): NextResponse => {

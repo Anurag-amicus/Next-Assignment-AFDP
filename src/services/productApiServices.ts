@@ -14,10 +14,7 @@ class ProductApiService {
     private readonly baseUrl: string;
 
     constructor() {
-        // Kept strictly on the server: process.env.API_URL
-        this.baseUrl =
-            process.env.API_URL ||
-            "https://training-ecom1-a9a2cmbsefdvgwha.centralindia-01.azurewebsites.net";
+        this.baseUrl = process.env.API_URL || "https://training-ecom1-a9a2cmbsefdvgwha.centralindia-01.azurewebsites.net";
     }
 
     private setQueryParam(
@@ -64,33 +61,10 @@ class ProductApiService {
         id: number | string,
         options?: RequestInit
     ): Promise<ApiResult<ProductResponse>> {
-        const result = await apiRequest<ProductResponse>(
+        return await apiRequest<ProductResponse>(
             `${this.baseUrl}/api/v1/Products/${id}`,
             options
         );
-
-        if (result.success) {
-            return result;
-        }
-
-        // Fallback: search across products to locate product by ID if direct route returned 404
-        if (result.status === 404 || !result.success) {
-            const searchResult = await this.getProducts({ PageSize: 50 }, options);
-            if (searchResult.success && searchResult.data.products) {
-                const found = searchResult.data.products.find(
-                    (p) => String(p.productId) === String(id)
-                );
-                if (found) {
-                    return {
-                        success: true,
-                        status: 200,
-                        data: found,
-                    };
-                }
-            }
-        }
-
-        return result;
     }
 
     /**
@@ -163,4 +137,4 @@ class ProductApiService {
 
 const productApiService = new ProductApiService();
 
-export { ProductApiService, productApiService };
+export { productApiService };
