@@ -58,8 +58,9 @@ npm run start
 | `src/proxy.ts` | **Server (Proxy)** | Next.js 16 edge request interceptor; enforces route guards for `/checkout`, `/orders`, and `/dashboard`, logs execution duration. |
 | `src/app/actions/authActions.ts` | **Server Action** | Form submission handlers (`loginAction`, `registerAction`, `logoutAction`), open-redirect sanitization, cookie dispatch. |
 | `src/lib/session.ts` | **Server Utility** | Secure HttpOnly cookie session manager (`access_token`, `refresh_token`, `auth_user`). |
-| `src/lib/auth.ts` | **Server Utility** | Proactive token renewal helper for server-side callers, kept decoupled from Server Action exports. |
 | `src/app/dashboard/page.tsx` | **Server** | Protected User Dashboard; composes SSR welcome banner and 2 independent Suspense streaming boundaries. |
+| `src/app/dashboard/loading.tsx` | **Server** | Route-level streaming skeleton rendering instant visual placeholders while data loads. |
+| `src/components/dashboard/DashboardWelcomeBanner.tsx` | **Server** | Renders personalized greeting, user initials avatar, active session badge, and responsive actions. |
 | `src/components/dashboard/AccountSummarySection.tsx` | **Server** | Async Server Component fetching address data; renders profile details and default shipping address with empty state. |
 | `src/components/dashboard/RecentOrdersSection.tsx` | **Server** | Async Server Component fetching paginated orders; renders recent order cards and View All Orders link with empty state. |
 | `src/app/checkout/page.tsx` | **Server** | Protected checkout stub requiring session authentication; renders status banner and verified user details. |
@@ -504,7 +505,7 @@ In Next.js, every function exported from a file marked with `"use server"` is au
 
 To prevent security vulnerabilities:
 - **`src/app/actions/authActions.ts`**: Contains only functions intended to be invoked by client forms (`loginAction`, `registerAction`, `logoutAction`).
-- **`src/lib/auth.ts`**: Contains internal server utilities such as `getValidAccessToken()`. This proactive token renewal function refreshes expired access tokens using the refresh token before invoking protected backend services, but is never exposed as a public Server Action endpoint.
+- **`src/proxy.ts`**: Centralizes edge token renewal and refresh token rotation on protected routes before page rendering begins, preventing illegal cookie-write runtime crashes during SSR and keeping Server Components purely read-only.
 
 #### 3. Open-Redirect Sanitization & Return URL Flow
 
@@ -631,6 +632,123 @@ export function proxy(request: NextRequest) {
 
 ---
 
+## 👤 Assignment 9: User Dashboard with SSR and Suspense
+
+### Objectives
+- Create a protected `/dashboard` route using Next.js App Router.
+- Render personalized user information on the server with Server-Side Rendering (SSR).
+- Integrate live backend data using the **Address API** (`/api/v1/addresses`) and **Orders API** (`/api/v1/orders/history`).
+- Implement at least **two independent Suspense boundaries** around asynchronous data components to enable progressive streaming.
+- Provide a route-level `loading.tsx` skeleton and component-level skeletons matching the React project aesthetic.
+- Display a personalized welcome banner with the user's name, active session status, role badge, and responsive navigation actions.
+- Display an account summary with profile credentials and default shipping address (with graceful empty state handling).
+- Display recent order history (top 3 recent orders) with item counts, order totals, status badges, and a direct link to the full orders page.
+- Ensure strict mobile-first responsiveness across all screen sizes with **zero horizontal scrolling**.
+- Enforce route protection via `src/proxy.ts` with automated token refresh and rotation.
+
+---
+
+### 🏛️ Dashboard Architecture & Independent Suspense Streaming
+
+The dashboard route is architected as an async Server Component (`src/app/dashboard/page.tsx`) that streams independent data sections without waterfall delays:
+
+```
+[Incoming Request: GET /dashboard]
+               │
+               ▼
+   [src/proxy.ts (Next.js 16 Proxy)]
+   - Validates session cookies
+   - Auto-refreshes expired access tokens via refresh token rotation
+               │
+               ▼
+   [src/app/dashboard/loading.tsx] ───► Instant Full-Page Skeleton Paint
+               │
+               ▼
+   [src/app/dashboard/page.tsx (SSR Parent)]
+   - Reads session server-side
+   - Renders <Breadcrumb /> and <DashboardWelcomeBanner user={user} /> instantly
+               │
+               ├───────────────────────────────────────────┐
+               ▼                                           ▼
+   ┌────────────────────────────────┐          ┌────────────────────────────────┐
+   │ <Suspense> Boundary 1          │          │ <Suspense> Boundary 2          │
+   │ Fallback: AccountSummarySkel   │          │ Fallback: RecentOrdersSkel     │
+   │ Component:                     │          │ Component:                     │
+   │ <AccountSummarySection />      │          │ <RecentOrdersSection />        │
+   │ (Calls addressApiService)      │          │ (Calls orderApiService)        │
+   └────────────────────────────────┘          └────────────────────────────────┘
+               │                                           │
+               ▼                                           ▼
+   [Streams in Address & Profile]              [Streams in Recent Orders]
+```
+
+#### Why Independent Suspense Boundaries Matter:
+1. **Parallel Execution**: Both `<AccountSummarySection />` and `<RecentOrdersSection />` initiate their respective backend network requests simultaneously.
+2. **Non-Blocking Streaming**: If the Orders API takes 800ms and the Address API takes 200ms, the Account Summary renders immediately at 200ms without waiting for Orders to finish. Neither slow API delays the user's view of the other section.
+3. **Instant First Contentful Paint**: The welcome banner (greeting, user role, active session badge, catalog/orders action links) renders immediately from session cookies on the server, ensuring zero blank-screen delay.
+
+---
+
+### 🧩 Dashboard Components & Responsive Design
+
+| Component | Path | Responsibility & Responsive Design |
+| :--- | :--- | :--- |
+| **Welcome Banner** | `src/components/dashboard/DashboardWelcomeBanner.tsx` | Personalized greeting (`Welcome back, {user.name}!`), initials avatar, active session badge, and responsive actions (`Browse Catalog`, `View All Orders`). Actions stack full-width on mobile (`<640px`) and align horizontally on desktop with `active:scale-[0.98]` touch feedback. |
+| **Account Summary** | `src/components/dashboard/AccountSummarySection.tsx` | Async Server Component. Fetches `/api/v1/addresses` using the authenticated token. Renders a 2-card responsive grid: Profile Details (Name, Email, Role, Customer ID) and Default Shipping Address. Uses `min-w-0` and `break-words` on all cells to eliminate CSS Grid blowout. Shows *"No address added yet"* empty state when unconfigured. |
+| **Recent Orders** | `src/components/dashboard/RecentOrdersSection.tsx` | Async Server Component. Fetches `/api/v1/orders/history` without query parameters and slices the top 3 items. Renders industrial order cards with status badges (`Placed`, `Processing`, `Shipped`, `Delivered`), item summary, total price, and a link to `/orders`. Shows *"You haven't placed any orders yet"* with *"Start Shopping"* CTA when empty. |
+| **Route Skeleton** | `src/app/dashboard/loading.tsx` | Full-page streaming placeholder displaying pulse skeletons for breadcrumbs, welcome banner, profile cards, and order list. |
+| **Account Skeleton** | `src/components/dashboard/AccountSummarySkeleton.tsx` | Isolated pulse skeleton for the 2-column account and address grid. |
+| **Orders Skeleton** | `src/components/dashboard/RecentOrdersSkeleton.tsx` | Isolated pulse skeleton for 3 recent order list items. |
+
+---
+
+### 📱 Zero-Horizontal-Scroll & Mobile-First Guarantees
+
+To ensure that the dashboard never triggers horizontal scrolling on any device (tested down to 320px mobile viewports):
+1. **Container Overflow Control**: `src/app/dashboard/page.tsx` and `loading.tsx` apply `w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-x-hidden min-w-0`.
+2. **Breadcrumb Wrapping**: `src/components/common/Breadcrumb.tsx` applies `flex-wrap` so lengthy breadcrumb trails wrap cleanly without forcing horizontal overflow.
+3. **Card Heading Safety**: All section headers and card title bars use `flex-wrap gap-2` to prevent badge and title collisions.
+4. **CSS Grid Column Blow-Out Prevention**: Every cell inside `grid-cols-1 sm:grid-cols-2` contains `min-w-0` and long text elements (e.g. street addresses, emails, product names) apply `break-words` or `truncate`.
+5. **Native Touch Targets**: All action buttons in the welcome banner and orders list are built with semantic Next.js `<Link>` elements (`w-full sm:w-auto min-h-10 px-4 py-2`), eliminating nested `<button>` event-swallowing bugs on mobile devices.
+
+---
+
+### 🔌 API Services & Data Contracts
+
+#### 1. Address API Service (`src/services/addressApiService.ts`)
+- **Method**: `getAddresses(token: string): Promise<ApiResult<Address[]>>`
+- **Endpoint**: `GET ${baseUrl}/api/v1/addresses` with `Authorization: Bearer ${token}`.
+- **Contract** (`src/types/address.ts`):
+  ```typescript
+  export interface Address {
+      addressId?: number;
+      customerId?: number;
+      addressLine1: string;
+      addressLine2?: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+      isDefault?: boolean;
+  }
+  ```
+
+#### 2. Order API Service (`src/services/orderApiService.ts`)
+- **Method**: `getOrderHistory(token: string, params?: { status?: string; page?: number; pageSize?: number }): Promise<ApiResult<OrderHistoryResponse>>`
+- **Endpoint**: `GET ${baseUrl}/api/v1/orders/history` with `Authorization: Bearer ${token}`. Query parameters are optional—invoked cleanly without query strings on the dashboard to fetch the recent list, where the Server Component slices the top 3 orders.
+- **Contract** (`src/types/order.ts`):
+  ```typescript
+  export interface BackendOrderDetail {
+      orderId: number;
+      totalAmount: number;
+      orderStatus: string;
+      createdAt: string;
+      items: BackendOrderItem[];
+  }
+  ```
+
+---
+
 ## 📁 Clean Folder Structure
 
 ```
@@ -659,6 +777,9 @@ src/
 │   │           └── route.ts          # GET (detail), PUT (update), DELETE (remove)
 │   ├── checkout/
 │   │   └── page.tsx                  # Protected checkout stub (Server Component)
+│   ├── dashboard/
+│   │   ├── loading.tsx               # Route-level dashboard streaming skeleton
+│   │   └── page.tsx                  # Protected User Dashboard with SSR and 2 Suspense streams
 │   ├── orders/
 │   │   └── page.tsx                  # Protected orders history stub (Server Component)
 │   ├── products/
@@ -683,6 +804,12 @@ src/
 │   │   ├── Card.tsx
 │   │   ├── Pagination.tsx
 │   │   └── QuantitySelector.tsx
+│   ├── dashboard/
+│   │   ├── AccountSummarySection.tsx  # Server Component: profile details & default address
+│   │   ├── AccountSummarySkeleton.tsx # Component-level skeleton for account summary
+│   │   ├── DashboardWelcomeBanner.tsx # Server Component: personalized welcome banner
+│   │   ├── RecentOrdersSection.tsx    # Server Component: recent orders list (top 3)
+│   │   └── RecentOrdersSkeleton.tsx   # Component-level skeleton for recent orders
 │   ├── layout/
 │   │   ├── Footer.tsx
 │   │   ├── Header.tsx
@@ -708,19 +835,22 @@ src/
 ├── hooks/
 │   └── useDebounce.ts                # Generic 300ms debouncing hook for search input
 ├── lib/
-│   ├── auth.ts                       # Proactive access token renewal helper (internal)
 │   └── session.ts                    # HttpOnly cookie session manager
 ├── proxy.ts                          # Next.js 16 Proxy: route protection & duration logging
 ├── services/
+│   ├── addressApiService.ts          # Server-side address communication service
 │   ├── apiClient.ts                  # Resilient HTTP request utility with status tracking
 │   ├── authApiService.ts             # Server-side Azure auth communication service
+│   ├── orderApiService.ts            # Server-side orders history communication service
 │   └── productApiServices.ts         # Server-only .NET API communication service
 ├── types/
+│   ├── address.ts                    # Address & AddressResponse interfaces
 │   ├── api.ts                        # ApiResult with HTTP status codes
 │   ├── auth.ts                       # Auth credentials, User, Session, and Action state definitions
 │   ├── button.ts
 │   ├── card.ts
 │   ├── filterPropTypes.ts
+│   ├── order.ts                      # BackendOrderDetail, BackendOrderItem, OrderHistoryResponse, OrderStatus
 │   ├── pagination.ts
 │   └── product.ts                    # Product, ProductResponse, ProductCreateInput, ProductUpdateInput
 └── utils/
@@ -777,7 +907,7 @@ src/
 - [x] **Server Actions for Auth**: `loginAction`, `registerAction`, and `logoutAction` with React 19 `useActionState`.
 - [x] **Secure HttpOnly Cookie Sessions**: `access_token` (1h), `refresh_token` (7d), and `auth_user` (7d) cookies with `SameSite=Lax`, `Path=/`, and `secure: true`.
 - [x] **Real Backend Azure API Integration**: Tested against live endpoints for login, registration, token refresh, and logout.
-- [x] **Proactive Token Refresh**: Dedicated `getValidAccessToken()` helper isolated outside `"use server"` action exports.
+- [x] **Proactive Token Refresh**: Dedicated token refresh with refresh token rotation centralized inside Next.js 16 Proxy (`src/proxy.ts`).
 - [x] **Strict Form Validation**: Name (min 2 chars), email regex, 8+ char complex password, and confirmation equality checking.
 - [x] **Open-Redirect Sanitization & Return URL**: `sanitizeReturnUrl()` prevents open redirect attacks; target path preserved across login and registration.
 - [x] **Password Visibility Eye Toggles**: Replaced text buttons with interactive inline `faEye` and `faEyeSlash` icons.
@@ -785,11 +915,20 @@ src/
 - [x] **Responsive Mobile Drawer Parity**: Mobile slide-out drawer reflects user avatar, name, role badge, and working logout action.
 
 ### Assignment 8: Proxy (Route Protection & Execution Logging)
-- [x] **Next.js 16 Proxy Migration**: Implemented in `src/proxy.ts` using `export function proxy(request: NextRequest)`.
-- [x] **Route Protection for `/checkout` and `/orders`**: Exclusively guards `/checkout` and `/orders` (and subpaths); unauthenticated visitors redirected to `/login?returnUrl=...`.
+- [x] **Next.js 16 Proxy Migration**: Implemented in `src/proxy.ts` using `export async function proxy(request: NextRequest)`.
+- [x] **Route Protection for Private Routes**: Guards `/checkout`, `/orders`, and `/dashboard` (and subpaths); unauthenticated visitors redirected to `/login?returnUrl=...`.
 - [x] **Return URL Forwarding**: Preserves origin path in URL query parameters, automatically navigating back after authentication.
 - [x] **Auth Page Redirect Bypass**: Authenticated users visiting `/login` or `/register` are redirected to their destination or `"/"`.
 - [x] **Execution Duration Logging**: High-resolution `[Proxy] <METHOD> <PATH> - <DURATION>ms (<STATUS>)` logged for every intercepted request.
 - [x] **Single Source of Auth Truth**: Synchronized on `COOKIE_ACCESS_TOKEN` across `proxy.ts` and `session.ts` to prevent redirect loops.
 - [x] **Defense-in-Depth Protected Pages**: `/checkout` and `/orders` verify session server-side, rendering status banners and verified user details.
+
+### Assignment 9: User Dashboard with SSR and Suspense
+- [x] **Dashboard with user-specific content**: Welcome banner with user's name, active session, role, and profile details rendered via SSR.
+- [x] **At least two independent Suspense sections**: Boundary 1 for Account/Default Address and Boundary 2 for Recent Orders.
+- [x] **Loading skeletons visible while data loads**: Route-level `loading.tsx` and component-level skeletons (`AccountSummarySkeleton`, `RecentOrdersSkeleton`) matching the React project design.
+- [x] **Protected route**: `/dashboard` guarded by `src/proxy.ts` and server-side session checks, with automatic token refresh and rotation.
+- [x] **Zero horizontal scrolling & responsive buttons**: Mobile-first flex/grid layouts with `min-w-0`, `break-words`, and responsive buttons.
+- [x] **Real backend integration**: Uses `addressApiService` (`/api/v1/addresses`) and `orderApiService` (`/api/v1/orders/history`) with zero mock data.
+- [x] **Recent orders with navigation**: Displays top 3 recent orders with link to `/orders` and empty state handling.
 

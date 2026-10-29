@@ -2,16 +2,16 @@ import { cookies } from "next/headers";
 import type { User, SessionData } from "@/types/auth";
 
 // Expiration intervals (in seconds)
-export const ACCESS_TOKEN_MAX_AGE = 60 * 60; // 1 hour
+export const ACCESS_TOKEN_MAX_AGE = 60 * 60 * 2; // 2 hour
 export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
-export const AUTH_USER_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+export const AUTH_USER_MAX_AGE = 60 * 60 * 24 * 14; // 7 days
 
 // Cookie names
 export const COOKIE_ACCESS_TOKEN = "access_token";
 export const COOKIE_REFRESH_TOKEN = "refresh_token";
 export const COOKIE_AUTH_USER = "auth_user";
 
-const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
 
 /**
  * Creates user session by storing tokens and minimal display data in separate HttpOnly cookies.
@@ -26,7 +26,7 @@ export async function createSession(
     // 1. Access Token Cookie (Short-lived)
     cookieStore.set(COOKIE_ACCESS_TOKEN, accessToken, {
         httpOnly: true,
-        secure: IS_PRODUCTION,
+        secure: true,
         sameSite: "lax",
         path: "/",
         maxAge: ACCESS_TOKEN_MAX_AGE,
@@ -35,7 +35,7 @@ export async function createSession(
     // 2. Refresh Token Cookie (Long-lived)
     cookieStore.set(COOKIE_REFRESH_TOKEN, refreshToken, {
         httpOnly: true,
-        secure: IS_PRODUCTION,
+        secure: true,
         sameSite: "lax",
         path: "/",
         maxAge: REFRESH_TOKEN_MAX_AGE,
@@ -44,7 +44,7 @@ export async function createSession(
     // 3. Auth User Cookie (Minimal display data for Header/Layout)
     cookieStore.set(COOKIE_AUTH_USER, JSON.stringify(user), {
         httpOnly: true,
-        secure: IS_PRODUCTION,
+        secure: true,
         sameSite: "lax",
         path: "/",
         maxAge: AUTH_USER_MAX_AGE,
@@ -74,6 +74,40 @@ export async function getSession(): Promise<SessionData> {
         accessToken,
         isAuthenticated: Boolean(accessToken && user),
     };
+}
+
+/**
+ * Reads the raw refresh token on the server for token renewal.
+ */
+export async function getRefreshToken(): Promise<string | null> {
+    const cookieStore = await cookies();
+    return cookieStore.get(COOKIE_REFRESH_TOKEN)?.value || null;
+}
+
+/**
+ * Updates access token and rotated refresh token after a successful refresh.
+ */
+export async function updateSessionTokens(
+    accessToken: string,
+    refreshToken: string
+): Promise<void> {
+    const cookieStore = await cookies();
+
+    cookieStore.set(COOKIE_ACCESS_TOKEN, accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: ACCESS_TOKEN_MAX_AGE,
+    });
+
+    cookieStore.set(COOKIE_REFRESH_TOKEN, refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: REFRESH_TOKEN_MAX_AGE,
+    });
 }
 
 /**

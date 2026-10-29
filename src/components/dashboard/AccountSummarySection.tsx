@@ -4,25 +4,23 @@ import { addressApiService } from "@/services/addressApiService";
 
 interface AccountSummarySectionProps {
     user: User;
-    token: string | null;
 }
 
-export default async function AccountSummarySection({ user, token }: AccountSummarySectionProps) {
+export default async function AccountSummarySection({ user }: AccountSummarySectionProps) {
     let addresses: Address[] = [];
     let addressError: string | null = null;
 
-    if (token) {
-        try {
-            const result = await addressApiService.getAddresses(token);
-            if (result.success && Array.isArray(result.data)) {
-                addresses = result.data;
-            } else if (!result.success) {
-                addressError = result.error || "Unable to load addresses";
-            }
+    try {
+        const result = await addressApiService.getAddresses(token);
+        if (result.success && Array.isArray(result.data)) {
+            addresses = result.data;
+        } else if (!result.success) {
+            addressError = result.error || "Unable to load addresses";
+        }
         } catch {
             addressError = "Failed to connect to address service";
         }
-    }
+
 
     const defaultAddress =
         addresses.find((addr) => addr.isDefault) || (addresses.length > 0 ? addresses[0] : null);
