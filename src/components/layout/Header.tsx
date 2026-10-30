@@ -17,14 +17,12 @@ import HeaderUserMenu from "./HeaderUserMenu";
 import type { User } from "@/types/auth";
 
 export interface HeaderProps {
-    initialUser?: User | null;
     cartCount?: number;
     searchTerm?: string;
     onSearchChange?: (value: string) => void;
 }
 
 export default function Header({
-    initialUser = null,
     cartCount = 0,
     searchTerm,
     onSearchChange,
@@ -33,7 +31,28 @@ export default function Header({
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    const user = initialUser;
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        // If user is already loaded, skip fetching on regular page navigation
+        if (user && pathname !== "/login" && pathname !== "/register") return;
+
+        let isMounted = true;
+        fetch("/api/auth/me", { cache: "no-store" })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (isMounted) {
+                    setUser(data?.user || null);
+                }
+            })
+            .catch(() => {
+                if (isMounted) setUser(null);
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [pathname, user]);
 
     const isProductListingPage = pathname === "/products";
     const queryParam = searchParams.get("search") || "";
@@ -88,6 +107,7 @@ export default function Header({
     };
 
     const handleLogout = async () => {
+        setUser(null);
         await logoutAction();
     };
 
