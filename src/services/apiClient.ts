@@ -23,7 +23,15 @@ export async function apiRequest<T>(
             let errorMessage: string | null = null;
             try {
                 const parsed = JSON.parse(text);
-                errorMessage = parsed.message || parsed.title || parsed.error || (typeof parsed === "string" ? parsed : null);
+                errorMessage =
+                    parsed.detail ||
+                    (parsed.errors && typeof parsed.errors === "object"
+                        ? Object.values(parsed.errors).flat().join(", ")
+                        : null) ||
+                    parsed.message ||
+                    parsed.title ||
+                    parsed.error ||
+                    (typeof parsed === "string" ? parsed : null);
             } catch {
                 if (text && text.length < 200) {
                     errorMessage = text;

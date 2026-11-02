@@ -126,11 +126,23 @@ class CartApiService {
         token: string,
         options?: RequestInit
     ): Promise<ApiResult<number>> {
-        return apiRequest<number>(`${this.baseUrl}/api/v1/cart/count`, {
-            ...options,
-            headers: this.getAuthHeaders(token, options?.headers),
-            cache: "no-store",
-        });
+        const result = await apiRequest<{ itemCount: number }>(
+            `${this.baseUrl}/api/v1/cart/count`,
+            {
+                ...options,
+                headers: this.getAuthHeaders(token, options?.headers),
+                cache: "no-store",
+            }
+        );
+
+        if (!result.success) {
+            return result;
+        }
+
+        return {
+            success: true,
+            data: result.data.itemCount,
+        };
     }
 }
 
