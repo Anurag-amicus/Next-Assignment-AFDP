@@ -1,33 +1,43 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 import QuantitySelector from "@/components/common/QuantitySelector";
 import Button from "@/components/common/Button";
+import { addToCartAction } from "@/app/actions/cartActions";
+import { notifyCartUpdated } from "@/utils/cartUtils";
 import type { Product } from "@/types/product";
 
 export interface AddToCartSectionProps {
     product: Product;
-    onAddToCart?: (product: Product, quantity: number) => void;
 }
 
 export default function AddToCartSection({
     product,
-    onAddToCart,
 }: AddToCartSectionProps) {
     const [quantity, setQuantity] = useState(1);
     const [addedSuccess, setAddedSuccess] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
 
     const totalPrice = product.price * quantity;
 
-    const handleAddToCart = () => {
-        if (onAddToCart) {
-            onAddToCart(product, quantity);
-        } else {
-            console.log(`Added ${quantity}x "${product.name}" to cart!`);
+    const handleAddToCart = async () => {
+        setIsAdding(true);
+        try {
+            const res = await addToCartAction({ productId: product.id, quantity });
+            if (res.requireAuth) {
+                toast("Please log in to add products to your cart.", { icon: "⚠️" });
+            } else if (res.success) {
+                notifyCartUpdated(res.count);
+                toast.success(res.message || `Added ${quantity} item(s) to your cart!`);
+                setAddedSuccess(true);
+                setTimeout(() => setAddedSuccess(false), 2500);
+            } else {
+                toast.error(res.error || "Failed to add to cart.");
+            }
+        } finally {
+            setIsAdding(false);
         }
-
-        setAddedSuccess(true);
-        setTimeout(() => setAddedSuccess(false), 2500);
     };
 
     return (
@@ -45,14 +55,16 @@ export default function AddToCartSection({
                 <QuantitySelector
                     quantity={quantity}
                     onChange={setQuantity}
+                    disabled={isAdding}
                 />
 
                 <Button
                     variant="primary"
                     onClick={handleAddToCart}
-                    className="flex-1 min-w-44 h-11 text-xs font-bold uppercase tracking-wider"
+                    disabled={isAdding}
+                    className="flex-1 min-w-44 h-11 text-xs font-bold uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                    ADD TO CART
+                    {isAdding ? "ADDING..." : "ADD TO CART"}
                 </Button>
             </div>
 

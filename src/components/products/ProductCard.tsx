@@ -3,10 +3,14 @@
 import { memo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import type { ProductCardProps } from "@/types/product";
+import type { Product } from "@/types/product";
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
 import QuantitySelector from "@/components/common/QuantitySelector";
+
+import toast from "react-hot-toast";
+import { addToCartAction } from "@/app/actions/cartActions";
+import { notifyCartUpdated } from "@/utils/cartUtils";
 
 const ProductCard = memo(function ProductCard({
     id,
@@ -15,21 +19,27 @@ const ProductCard = memo(function ProductCard({
     price,
     imageUrl,
     rating,
-    onAddToCart,
-}: ProductCardProps) {
+}: Product) {
     const [quantity, setQuantity] = useState(1);
+    const [isAdding, setIsAdding] = useState(false);
 
     const unitPrice = price;
     const totalPrice = unitPrice * quantity;
 
-    const handleClick = () => {
-        if (onAddToCart) {
-            onAddToCart(
-                { id, name, category, price, imageUrl, rating },
-                quantity
-            );
-        } else {
-            console.log(`Added ${quantity}x "${name}" to cart!`);
+    const handleClick = async () => {
+        setIsAdding(true);
+        try {
+            const res = await addToCartAction({ productId: id, quantity });
+            if (res.requireAuth) {
+                toast("Please log in to add products to your cart.", { icon: "⚠️" });
+            } else if (res.success) {
+                notifyCartUpdated(res.count);
+                toast.success(res.message || `Added ${quantity} item(s) to cart!`);
+            } else {
+                toast.error(res.error || "Failed to add to cart.");
+            }
+        } finally {
+            setIsAdding(false);
         }
     };
 
@@ -108,9 +118,10 @@ const ProductCard = memo(function ProductCard({
 
                 <Button
                     onClick={handleClick}
-                    className="w-42 h-13 mt-3 py-3 px-4 rounded-xs font-display text-base font-bold leading-none tracking-wide uppercase whitespace-nowrap shrink-0 hover:bg-orange-dark active:translate-y-px max-[480px]:w-45"
+                    disabled={isAdding}
+                    className="w-42 h-13 mt-3 py-3 px-4 rounded-xs font-display text-base font-bold leading-none tracking-wide uppercase whitespace-nowrap shrink-0 hover:bg-orange-dark active:translate-y-px max-[480px]:w-45 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                    ADD TO CART
+                    {isAdding ? "ADDING..." : "ADD TO CART"}
                 </Button>
             </div>
         </Card>
