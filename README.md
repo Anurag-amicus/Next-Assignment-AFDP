@@ -749,6 +749,72 @@ To ensure that the dashboard never triggers horizontal scrolling on any device (
 
 ---
 
+## 🛒 Assignment 10: Add to Cart and Cart Page
+
+### Objectives
+- Implement robust Server Actions for cart mutations: Add to Cart (`addToCartAction`), Update Quantity (`updateQuantityAction`), Remove Item (`removeItemAction`), and Clear Cart (`clearCartAction`).
+- Validate incoming cart payload data using Zod schemas (`cartItemPayloadSchema`, `removeCartItemSchema`).
+- Persist cart items across browser navigation, page reloads, and server restarts via authenticated API session cookies.
+- Maintain a hybrid architecture with an async Server Component page layout (`src/app/cart/page.tsx`) and an interactive Client Component view (`CartClientView.tsx`).
+- Render cart items with product thumbnails, titles, unit prices, quantity increment/decrement controls, line totals, and remove buttons.
+- Display pending transition states (`isPending` / `useTransition`) on interactive buttons during server mutations.
+- Calculate dynamic Order Summary breakdown: Subtotal, Shipping, 8% Tax, and Total amount.
+- Provide primary navigation actions: `"PROCEED TO CHECKOUT"` and `"CONTINUE SHOPPING"`.
+- Implement responsive empty cart state featuring informative messaging and a `"Browse Products"` CTA button.
+
+---
+
+### ⚙️ Cart Architecture & Key Components
+
+1. **Server Actions & Zod Validation (`src/app/actions/cartActions.ts`, `src/lib/validations/cartSchema.ts`)**:
+   - `addToCartAction(payload)` & `updateQuantityAction(payload)`: Validate `{ productId, quantity }` (1–99) via `cartItemPayloadSchema`.
+   - `removeItemAction(payload)`: Validates positive `productId` via `removeCartItemSchema`.
+   - `clearCartAction()`: Flushes active cart items and invalidates server cache tags.
+2. **SSR Hydration & Client Interactivity (`src/app/cart/page.tsx`, `src/components/cart/CartClientView.tsx`)**:
+   - `src/app/cart/page.tsx` reads session cookies and pre-fetches initial cart data server-side via `cartApiService.getCart()`, preventing blank-page flicker.
+   - `CartClientView.tsx` coordinates optimistic quantity changes, live total updates, and instant visual feedback during pending transitions.
+3. **Order Summary Calculations (`src/components/cart/OrderSummary.tsx`)**:
+   - Calculates items subtotal from quantities and unit prices.
+   - Computes standard shipping and standard 8% sales tax.
+   - Dynamically enables or disables the `"PROCEED TO CHECKOUT"` action based on cart occupancy.
+
+---
+
+## 💳 Assignment 11: Checkout Page Integration
+
+### Objectives
+- Implement end-to-end order placement via Server Action (`placeOrderAction`) coordinating address creation, checkout, and mock payment.
+- Enforce strict Zod validation on shipping inputs (`shippingSchema`) matching React assignment constraints: required fields, valid email, 10-digit phone, 5–6 alphanumeric ZIP, and whitespace rejection.
+- Provide immediate inline validation errors under each field and loading states on submission buttons.
+- Architect a multi-step checkout workflow with visual step indicators: **Shipping Information**, **Payment Options**, and **Order Review**.
+- Implement dynamic shipping methods (Standard ₹100, Express ₹250, Same Day ₹400) that update order totals in real-time.
+- Preload and cache geographic data (Countries, States, Cities) leveraging Next.js 24-hour server caching (`revalidate: 86400`) and on-demand Server Actions (`geoActions.ts`).
+- Support saved address selection with seamless toggle to add/edit a new address.
+- Empty cart protection: Route-level guard (`src/app/checkout/page.tsx`) redirecting empty carts to `/products` and server-action guard in `placeOrderAction`.
+- Post-order lifecycle: Clears cart upon successful order placement, displays confirmation messaging, and navigates to `/orders`.
+
+---
+
+### ⚙️ Checkout Architecture & Multi-Step Workflow
+
+1. **Server-Side Data Preloading (`src/app/checkout/page.tsx`)**:
+   - Verifies authenticated session via `getSession()`.
+   - Enforces empty cart guard: Redirects empty carts immediately to `/products`.
+   - Pre-fetches saved user addresses via `addressApiService.getAddresses()`.
+   - Pre-fetches countries list with Next.js data caching (`{ next: { revalidate: 86400 } }`).
+2. **Multi-Step Client Flow (`src/components/checkout/CheckoutClientView.tsx`)**:
+   - **Step 1: Shipping Information**: Supports selecting existing saved addresses or entering a new address via `ShippingFormFields.tsx` with instant Zod field validation and progressive country/state/city dropdowns. Includes shipping method selection (`ShippingMethodSelector.tsx`).
+   - **Step 2: Payment Options**: Mock payment method selection with visual confirmation badge.
+   - **Step 3: Order Review**: Itemized order summary review with thumbnail list, shipping destination summary, cost breakdown, and final "Place Order" trigger.
+3. **Order Placement Pipeline (`src/app/actions/orderActions.ts`)**:
+   - Validates shipping payload via `shippingSchema` (when creating a new address).
+   - Re-checks cart non-empty status on the server.
+   - Creates new address record if required (`addressApiService.createAddress`).
+   - Executes checkout transaction (`checkoutApiService.checkout`) and authorizes mock payment (`checkoutApiService.mockPayment`).
+   - Clears cart via `cartApiService.clearCart` and triggers cache revalidation (`revalidatePath` for `/cart`, `/orders`, and `/dashboard`).
+
+---
+
 ## 📁 Clean Folder Structure
 
 ```
@@ -769,19 +835,24 @@ src/
 │   ├── about/
 │   │   └── page.tsx
 │   ├── actions/
-│   │   └── authActions.ts            # Server Actions: loginAction, registerAction, logoutAction
+│   │   ├── authActions.ts            # Server Actions: loginAction, registerAction, logoutAction
+│   │   ├── cartActions.ts            # Server Actions: addToCart, updateQuantity, removeItem, clearCart
+│   │   ├── geoActions.ts             # Server Actions: getStatesAction, getCitiesAction
+│   │   └── orderActions.ts           # Server Actions: placeOrderAction with address, checkout & mock payment
 │   ├── api/
 │   │   └── products/
 │   │       ├── route.ts              # GET (list + pagination), POST (create)
 │   │       └── [id]/
 │   │           └── route.ts          # GET (detail), PUT (update), DELETE (remove)
+│   ├── cart/
+│   │   └── page.tsx                  # Shopping Cart page (Server Component with SSR prefetch)
 │   ├── checkout/
-│   │   └── page.tsx                  # Protected checkout stub (Server Component)
+│   │   └── page.tsx                  # Multi-step Checkout page (Server Component with route & empty-cart guards)
 │   ├── dashboard/
 │   │   ├── loading.tsx               # Route-level dashboard streaming skeleton
 │   │   └── page.tsx                  # Protected User Dashboard with SSR and 2 Suspense streams
 │   ├── orders/
-│   │   └── page.tsx                  # Protected orders history stub (Server Component)
+│   │   └── page.tsx                  # Protected Orders History page (Server Component)
 │   ├── products/
 │   │   └── [id]/
 │   │       ├── error.tsx             # Detail error boundary
@@ -797,6 +868,21 @@ src/
 │   ├── auth/
 │   │   ├── LoginForm.tsx             # Client Component: login form with useActionState
 │   │   └── RegisterForm.tsx          # Client Component: registration form with validation
+│   ├── cart/
+│   │   ├── Cart.tsx                  # Cart layout container
+│   │   ├── CartClientView.tsx        # Client Component: cart interactivity, optimistic updates & transitions
+│   │   ├── CartItem.tsx              # Individual cart item row with quantity controls & remove action
+│   │   ├── CartSkeleton.tsx          # Loading skeleton for cart items
+│   │   └── OrderSummary.tsx          # Order summary card with subtotal, shipping, 8% tax & total
+│   ├── checkout/
+│   │   ├── CheckoutClientView.tsx    # Multi-step checkout orchestrator (Shipping, Payment, Review)
+│   │   ├── CheckoutSummary.tsx       # Live checkout order summary with selected shipping rate
+│   │   ├── PaymentStep.tsx           # Mock payment method selection step
+│   │   ├── ReviewStep.tsx            # Order review step before placement
+│   │   ├── SavedAddressList.tsx      # Saved address cards selection & new address toggle
+│   │   ├── ShippingForm.tsx          # Shipping form manager with Zod validation
+│   │   ├── ShippingFormFields.tsx    # Controlled inputs with real-time error messages
+│   │   └── ShippingMethodSelector.tsx# Standard, Express, and Same Day shipping selector
 │   ├── common/
 │   │   ├── Arrow.tsx
 │   │   ├── Breadcrumb.tsx
@@ -835,12 +921,18 @@ src/
 ├── hooks/
 │   └── useDebounce.ts                # Generic 300ms debouncing hook for search input
 ├── lib/
-│   └── session.ts                    # HttpOnly cookie session manager
+│   ├── session.ts                    # HttpOnly cookie session manager
+│   └── validations/
+│       ├── cartSchema.ts             # Zod schemas: cartItemPayloadSchema, removeCartItemSchema
+│       └── shippingSchema.ts         # Zod schemas: shippingSchema and field-level validation helpers
 ├── proxy.ts                          # Next.js 16 Proxy: route protection & duration logging
 ├── services/
 │   ├── addressApiService.ts          # Server-side address communication service
 │   ├── apiClient.ts                  # Resilient HTTP request utility with status tracking
 │   ├── authApiService.ts             # Server-side Azure auth communication service
+│   ├── cartApiService.ts             # Server-side cart management service
+│   ├── checkoutApiService.ts         # Server-side checkout and mock payment service
+│   ├── geoApiService.ts              # Geographic data service with Next.js 24h server cache
 │   ├── orderApiService.ts            # Server-side orders history communication service
 │   └── productApiServices.ts         # Server-only .NET API communication service
 ├── types/
@@ -849,13 +941,19 @@ src/
 │   ├── auth.ts                       # Auth credentials, User, Session, and Action state definitions
 │   ├── button.ts
 │   ├── card.ts
+│   ├── cart.ts                       # CartItem, CartItemPayload, CartActionResult interfaces
+│   ├── checkout.ts                   # CheckoutPayload, MockPaymentPayload, CheckoutResponse interfaces
 │   ├── filterPropTypes.ts
+│   ├── geoData.ts                    # Country, State, GeoState definitions
 │   ├── order.ts                      # BackendOrderDetail, BackendOrderItem, OrderHistoryResponse, OrderStatus
 │   ├── pagination.ts
-│   └── product.ts                    # Product, ProductResponse, ProductCreateInput, ProductUpdateInput
+│   ├── product.ts                    # Product, ProductResponse, ProductCreateInput, ProductUpdateInput
+│   └── shipping.ts                   # ShippingFormData, ShippingFormErrors, ShippingMethod types
 └── utils/
+    ├── cartUtils.ts                  # Cart totals, item counts & tax calculation helpers
     ├── cn.ts
-    └── dataTransformation.ts         # Bidirectional schema mappers and input validators
+    ├── dataTransformation.ts         # Bidirectional schema mappers and input validators
+    └── shippingHelpers.ts            # Address payload builder & shipping rate calculator
 ```
 
 ---
@@ -931,4 +1029,24 @@ src/
 - [x] **Zero horizontal scrolling & responsive buttons**: Mobile-first flex/grid layouts with `min-w-0`, `break-words`, and responsive buttons.
 - [x] **Real backend integration**: Uses `addressApiService` (`/api/v1/addresses`) and `orderApiService` (`/api/v1/orders/history`) with zero mock data.
 - [x] **Recent orders with navigation**: Displays top 3 recent orders with link to `/orders` and empty state handling.
+
+### Assignment 10: Add to Cart and Cart Page
+- [x] **Working Server Actions for cart**: `addToCartAction`, `updateQuantityAction`, `removeItemAction`, `clearCartAction`, and `getCartAction`.
+- [x] **Zod schema validation for cart data**: `cartItemPayloadSchema` and `removeCartItemSchema` in `src/lib/validations/cartSchema.ts`.
+- [x] **Cart page matching mockup**: Responsive cart layout matching the industrial design system.
+- [x] **Quantity update and remove working**: Interactive +/- controls and delete buttons with pending states.
+- [x] **Correct summary calculations**: Accurate Subtotal, Shipping, Tax (8%), and Grand Total.
+- [x] **Empty cart state**: Informative empty cart display with a direct "Browse Products" CTA button.
+- [x] **Cart persistence**: Persistent cart items across navigation and page refreshes via authenticated API session.
+
+### Assignment 11: Checkout Page Integration
+- [x] **Checkout page matching mockup**: 3-step checkout interface (Shipping, Payment, Review) with responsive Order Summary sidebar.
+- [x] **Server Action for order placement**: `placeOrderAction` coordinates address saving, checkout, mock payment, and cache revalidation.
+- [x] **Zod schema for shipping data**: `shippingSchema` validating full name, email, 10-digit phone, address, city, state, country, ZIP (5–6 chars), and shipping method.
+- [x] **Inline validation errors**: Real-time validation feedback displayed under individual form inputs.
+- [x] **Dynamic shipping methods**: Standard, Express, and Same Day selections updating summary totals in real-time.
+- [x] **Empty cart guard**: Server-side redirect in `src/app/checkout/page.tsx` and guard in `placeOrderAction`.
+- [x] **Cart cleared after order**: Automatic cart clearing upon successful placement and redirection to `/orders`.
+- [x] **Geographic data caching**: Next.js 24-hour server data cache for countries with Server Actions for progressive state and city loading.
+
 
