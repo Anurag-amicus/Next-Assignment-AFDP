@@ -1,23 +1,16 @@
-import type { ApiResult, ApiRequestOptions } from "../types/api";
+import type { ApiResult} from "../types/api";
 
 
 
 export async function apiRequest<T>(
     url: string,
-    options?: ApiRequestOptions
+    options?: RequestInit
 ): Promise<ApiResult<T>> {
     try {
         const headers = new Headers(options?.headers);
         if (!headers.has("Accept")) {
             headers.set("Accept", "application/json");
         }
-        if (!headers.has("User-Agent")) {
-            headers.set(
-                "User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            );
-        }
-
 
         const response = await fetch(url, {
             ...options,

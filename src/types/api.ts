@@ -9,8 +9,3 @@ export type ApiResult<T> =
         error: string;
         status?: number;
     };
-
-export interface ApiRequestOptions extends RequestInit {
-    authorize?: boolean;
-    _retried?: boolean;
-}

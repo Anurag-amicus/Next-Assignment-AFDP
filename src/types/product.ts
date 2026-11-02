@@ -74,12 +74,8 @@ export interface QuantitySelectorProps {
     disabled?: boolean;
 }
 
-export interface ProductCardProps extends Product {
-    onAddToCart?: (product: Product, quantity: number) => void;
-}
 
 export interface FeaturedCarouselProps {
-    onAddToCart?: (product: Product, quantity: number) => void;
     initialProducts?: Product[];
 }
 
