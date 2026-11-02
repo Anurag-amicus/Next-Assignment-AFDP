@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
     title: "Online Express | Premium Shopping Experience",
@@ -22,6 +23,7 @@ export default function RootLayout({
                 </Suspense>
                 <main className="flex-1 w-full flex flex-col">{children}</main>
                 <Footer />
+                <Toaster position="top-right" />
             </body>
         </html>
     );

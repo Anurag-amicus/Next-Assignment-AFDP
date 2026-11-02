@@ -9,7 +9,7 @@ import {
     REFRESH_TOKEN_MAX_AGE,
 } from "@/lib/session";
 
-const PROTECTED_ROUTES = ["/checkout", "/orders", "/dashboard"];
+const PROTECTED_ROUTES = ["/checkout", "/orders", "/dashboard", "/cart"];
 const COOKIE_BASE = { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" };
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
@@ -46,7 +46,13 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
                 request.cookies.set(COOKIE_ACCESS_TOKEN, res.data.token);
                 request.cookies.set(COOKIE_REFRESH_TOKEN, res.data.refreshToken);
 
-                const response = NextResponse.next({ request: { headers: request.headers } });
+                const requestHeaders = new Headers(request.headers);
+                requestHeaders.set(
+                    "cookie",
+                    request.cookies.getAll().map((c) => `${c.name}=${c.value}`).join("; ")
+                );
+
+                const response = NextResponse.next({ request: { headers: requestHeaders } });
                 response.cookies.set(COOKIE_ACCESS_TOKEN, res.data.token, { ...COOKIE_BASE, maxAge: ACCESS_TOKEN_MAX_AGE });
                 response.cookies.set(COOKIE_REFRESH_TOKEN, res.data.refreshToken, { ...COOKIE_BASE, maxAge: REFRESH_TOKEN_MAX_AGE });
                 return log(response);
