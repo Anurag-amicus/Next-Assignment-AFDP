@@ -4,7 +4,7 @@ import {
     transformProduct,
     validateAndTransformUpdatePayload,
 } from "@/utils/dataTransformation";
-
+import { getSession } from "@/lib/session";
 interface RouteContext {
     params: Promise<{ id: string }>;
 }
@@ -88,8 +88,11 @@ export async function PUT(
                 { status: 400 }
             );
         }
-
-        const result = await productApiService.updateProduct(id, validation.data);
+        const session = await getSession();
+        if (!session.isAuthenticated || !session.accessToken) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        const result = await productApiService.updateProduct(Number(id), validation.data, { token: session.accessToken });
 
         if (!result.success) {
             const status = result.status === 404 ? 404 : result.status ?? 502;
@@ -131,9 +134,11 @@ export async function DELETE(
                 { error: "Invalid product ID. ID must be a numeric value." },
                 { status: 400 }
             );
+        } const session = await getSession();
+        if (!session.isAuthenticated || !session.accessToken) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-
-        const result = await productApiService.deleteProduct(id);
+        const result = await productApiService.deleteProduct(Number(id), {token:session.accessToken});
 
         if (!result.success) {
             const status = result.status === 404 ? 404 : result.status ?? 502;

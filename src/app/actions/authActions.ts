@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { authApiService } from "@/services/authApiService";
-import { createSession, deleteSession, getSession } from "@/lib/session";
-import type { User, AuthActionState } from "@/types/auth";
+import { createSession, deleteSession, getRefreshToken} from "@/lib/session";
+import type { AuthActionState } from "@/types/auth";
 
 function getFormString(formData: FormData, key: string): string {
     const value = formData.get(key);
@@ -58,14 +58,7 @@ export async function loginAction(
             };
         }
 
-        const user: User = {
-            customerId: result.data.customerId,
-            name: result.data.name || email.split("@")[0],
-            role: result.data.role || "Customer",
-            email: email.toLowerCase(),
-        };
-
-        await createSession(result.data.token, result.data.refreshToken, user);
+        await createSession(result.data.token, result.data.refreshToken);
     } catch {
         return {
             success: false,
@@ -144,9 +137,9 @@ export async function registerAction(
 
 export async function logoutAction(): Promise<void> {
     try {
-        const session = await getSession();
-        if (session.accessToken) {
-            await authApiService.logout(session.accessToken).catch(() => {});
+        const refreshToken = await getRefreshToken();
+        if (refreshToken) {
+            await authApiService.logout(refreshToken).catch(() => {});
         }
     } finally {
         await deleteSession();

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default async function CheckoutPage() {
     // 1. Route Guard: Check Authenticated Session
     const session = await getSession();
-    if (!session.isAuthenticated || !session.user || !session.accessToken) {
+    if (!session.isAuthenticated || !session.accessToken) {
         redirect("/login?returnUrl=/checkout");
     }
 
@@ -48,8 +48,6 @@ export default async function CheckoutPage() {
                 savedAddresses={savedAddresses}
                 initialCountries={initialCountries}
                 accessToken={session.accessToken}
-                defaultFullName={session.user.name || ""}
-                defaultEmail={session.user.email || ""}
             />
         </div>
     );

@@ -21,3 +21,9 @@ export interface CartActionResult {
     items?: CartItem[];
     count?: number;
 }
+
+
+export interface CartContextType {
+    cartCount: number;
+    setCartCount: (count: number) => void;
+}

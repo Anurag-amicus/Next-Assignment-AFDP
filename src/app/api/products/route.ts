@@ -6,6 +6,7 @@ import {
     validateAndTransformCreatePayload,
 } from "@/utils/dataTransformation";
 import type { ProductQueryParams } from "@/types/product";
+import { getSession } from "@/lib/session";
 
 /**
  * GET /api/products
@@ -120,7 +121,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const result = await productApiService.createProduct(validation.data);
+        const session = await getSession();
+        if (!session.isAuthenticated || !session.accessToken) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const result = await productApiService.createProduct(validation.data, {token: session.accessToken});
 
         if (!result.success) {
             return NextResponse.json(

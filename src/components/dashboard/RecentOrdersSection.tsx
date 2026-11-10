@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { BackendOrderDetail } from "@/types/order";
+import type { OrderDetail } from "@/types/order";
 import { orderApiService } from "@/services/orderApiService";
 import { getSession } from "@/lib/session";
 
@@ -21,12 +21,12 @@ function getStatusBadgeClass(status?: string): string {
 }
 
 export default async function RecentOrdersSection() {
-    let orders: BackendOrderDetail[] = [];
+    let orders: OrderDetail[] = [];
     let ordersError: string | null = null;
     const session = await getSession();
     if (session.accessToken) {
         try {
-            const result = await orderApiService.getOrderHistory(session.accessToken);
+            const result = await orderApiService.getOrderHistory({token:session.accessToken});
             if (result.success && result.data?.orders) {
                 orders = result.data.orders.slice(0, 3);
             } else if (!result.success) {
@@ -69,7 +69,7 @@ export default async function RecentOrdersSection() {
             ) : orders.length === 0 ? (
                 <div className="bg-white border border-border rounded-xs p-6 sm:p-8 shadow-xs text-center">
                     <p className="font-display text-base font-bold text-charcoal m-0">
-                        You haven&apos;t placed any orders yet.
+                        You have not placed any orders yet.
                     </p>
                     <p className="text-xs text-muted m-0 mt-1 mb-4">
                         When you purchase items, your order history will appear here.

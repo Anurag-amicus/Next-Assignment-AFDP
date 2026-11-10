@@ -1,6 +1,20 @@
 export type OrderStatus = "Processing" | "Shipped" | "Delivered" | "Cancelled";
 
-export interface BackendOrderItem {
+export type OrderFilterTab = "All Orders" | OrderStatus;
+
+export interface Order {
+    orderId: number;
+    orderDate: string; // ISO date string
+    status: OrderStatus;
+    items: OrderItem[];
+    itemCount: number;
+    totalAmount: number;
+    shippingAddress?: OrderShippingAddress;
+    shippingMethod?: string;
+    shippingCost?: number;
+    paymentMethod?: string;
+}
+export interface OrderItem {
     orderItemId: number;
     productId: number;
     productName: string;
@@ -10,17 +24,16 @@ export interface BackendOrderItem {
     imageUrl?: string;
 }
 
-export interface BackendOrderShipping {
-    shippingName?: string;
-    shippingAddress?: string;
-    shippingCity?: string;
-    shippingState?: string;
-    shippingPostalCode?: string;
-    shippingMethod?: string;
-    shippingCharge?: number;
+export interface OrderShippingAddress {
+    fullName?: string;
+    streetAddress: string;
+    aptSuite?: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
 }
-
-export interface BackendOrderPayment {
+export interface OrderPayment {
     paymentId?: number;
     orderId?: number;
     paymentStatus?: string;
@@ -30,7 +43,7 @@ export interface BackendOrderPayment {
     createdAt?: string;
 }
 
-export interface BackendOrderDetail {
+export interface OrderDetail {
     orderId: number;
     customerId?: number;
     subtotal?: number;
@@ -39,13 +52,13 @@ export interface BackendOrderDetail {
     totalAmount: number;
     orderStatus?: string;
     createdAt: string;
-    items?: BackendOrderItem[];
-    shipping?: BackendOrderShipping;
-    payment?: BackendOrderPayment;
+    items?: OrderItem[];
+    shipping?: OrderShippingAddress;
+    payment?: OrderPayment;
 }
 
 export interface OrderHistoryResponse {
-    orders: BackendOrderDetail[];
+    orders: OrderDetail[];
     totalRecords?: number;
     totalPages?: number;
     page?: number;

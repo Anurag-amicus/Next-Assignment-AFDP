@@ -1,13 +1,10 @@
-import type { User } from "@/types/auth";
 import type { Address } from "@/types/address";
 import { addressApiService } from "@/services/addressApiService";
 import { getSession } from "@/lib/session";
 
-interface AccountSummarySectionProps {
-    user: User;
-}
 
-export default async function AccountSummarySection({ user }: AccountSummarySectionProps) {
+
+export default async function AccountSummarySection() {
     let addresses: Address[] = [];
     let addressError: string | null = null;
 
@@ -55,8 +52,8 @@ export default async function AccountSummarySection({ user }: AccountSummarySect
                                 <span className="text-[11px] text-muted block uppercase tracking-wider font-semibold">
                                     Full Name
                                 </span>
-                                <span className="font-bold text-charcoal truncate block" title={user.name}>
-                                    {user.name || "N/A"}
+                                <span className="font-bold text-charcoal truncate block" title="name">
+                                    NAME
                                 </span>
                             </div>
 
@@ -64,8 +61,8 @@ export default async function AccountSummarySection({ user }: AccountSummarySect
                                 <span className="text-[11px] text-muted block uppercase tracking-wider font-semibold">
                                     Email Address
                                 </span>
-                                <span className="font-bold text-charcoal truncate block" title={user.email}>
-                                    {user.email || "N/A"}
+                                <span className="font-bold text-charcoal truncate block" title="email">
+                                    EMAIL@DUMMY.com
                                 </span>
                             </div>
 
@@ -74,7 +71,7 @@ export default async function AccountSummarySection({ user }: AccountSummarySect
                                     Account Role
                                 </span>
                                 <span className="font-bold text-charcoal truncate block">
-                                    {user.role || "Customer"}
+                                    Customer
                                 </span>
                             </div>
 
@@ -82,8 +79,8 @@ export default async function AccountSummarySection({ user }: AccountSummarySect
                                 <span className="text-[11px] text-muted block uppercase tracking-wider font-semibold">
                                     Customer ID
                                 </span>
-                                <span className="font-bold text-charcoal truncate block" title={String(user.customerId)}>
-                                    {user.customerId || "N/A"}
+                                <span className="font-bold text-charcoal truncate block" title="Customer ID">
+                                    N/A
                                 </span>
                             </div>
                         </div>

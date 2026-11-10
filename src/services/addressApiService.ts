@@ -1,7 +1,7 @@
 import type { Address, AddressResponse } from "../types/address";
 import type { ApiResult } from "../types/api";
 import { apiRequest } from "./apiClient";
-
+import getAuthHeaders from "@/utils/authHelper";
 class AddressApiService {
     private readonly baseUrl: string;
 
@@ -14,10 +14,7 @@ class AddressApiService {
     async getAddresses(token: string, options?: RequestInit): Promise<ApiResult<Address[]>> {
         return apiRequest<Address[]>(`${this.baseUrl}/api/v1/addresses`, {
             ...options,
-            headers: {
-                Authorization: `Bearer ${token}`,
-                ...options?.headers,
-            },
+            headers: getAuthHeaders(token, options?.headers),
             cache: "no-store",
         });
     }
@@ -27,14 +24,12 @@ class AddressApiService {
         token: string,
         options?: RequestInit
     ): Promise<ApiResult<AddressResponse>> {
+        const headers = getAuthHeaders(token, options?.headers);
+        headers.set("Content-Type", "application/json");
         return apiRequest<AddressResponse>(`${this.baseUrl}/api/v1/addresses`, {
             ...options,
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-                ...options?.headers,
-            },
+            headers,
             body: JSON.stringify(address),
         });
     }
@@ -45,16 +40,14 @@ class AddressApiService {
         token: string,
         options?: RequestInit
     ): Promise<ApiResult<{ message?: string }>> {
+        const headers = getAuthHeaders(token, options?.headers);
+        headers.set("Content-Type", "application/json");
         return apiRequest<{ message?: string }>(
             `${this.baseUrl}/api/v1/addresses/${addressId}`,
             {
                 ...options,
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                    ...options?.headers,
-                },
+                headers,
                 body: JSON.stringify(address),
             }
         );
@@ -68,10 +61,7 @@ class AddressApiService {
         return apiRequest<void>(`${this.baseUrl}/api/v1/addresses/${addressId}`, {
             ...options,
             method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                ...options?.headers,
-            },
+            headers: getAuthHeaders(token, options?.headers),
         });
     }
 }

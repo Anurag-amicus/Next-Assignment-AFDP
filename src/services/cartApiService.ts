@@ -1,6 +1,7 @@
 import type { ApiResult } from "../types/api";
 import type { CartItem } from "../types/cart";
 import { apiRequest } from "./apiClient";
+import getAuthHeaders from "../utils/authHelper"
 
 class CartApiService {
     private readonly baseUrl: string;
@@ -11,12 +12,6 @@ class CartApiService {
             "https://training-ecom1-a9a2cmbsefdvgwha.centralindia-01.azurewebsites.net";
     }
 
-    private getAuthHeaders(token: string, headers?: HeadersInit): Headers {
-        const h = new Headers(headers);
-        h.set("Authorization", `Bearer ${token}`);
-        return h;
-    }
-
     /**
      * GET /api/v1/cart
      * Fetches current user's cart items.
@@ -24,7 +19,7 @@ class CartApiService {
     async getCart(token: string, options?: RequestInit): Promise<ApiResult<CartItem[]>> {
         return apiRequest<CartItem[]>(`${this.baseUrl}/api/v1/cart`, {
             ...options,
-            headers: this.getAuthHeaders(token, options?.headers),
+            headers: getAuthHeaders(token, options?.headers),
             cache: "no-store",
         });
     }
@@ -39,7 +34,7 @@ class CartApiService {
         quantity: number,
         options?: RequestInit
     ): Promise<ApiResult<{ message?: string } | null>> {
-        const headers = this.getAuthHeaders(token, options?.headers);
+        const headers = getAuthHeaders(token, options?.headers);
         headers.set("Content-Type", "application/json");
 
         return apiRequest<{ message?: string } | null>(
@@ -64,7 +59,7 @@ class CartApiService {
         quantity: number,
         options?: RequestInit
     ): Promise<ApiResult<{ message?: string } | null>> {
-        const headers = this.getAuthHeaders(token, options?.headers);
+        const headers = getAuthHeaders(token, options?.headers);
         headers.set("Content-Type", "application/json");
 
         return apiRequest<{ message?: string } | null>(
@@ -93,7 +88,7 @@ class CartApiService {
             {
                 ...options,
                 method: "DELETE",
-                headers: this.getAuthHeaders(token, options?.headers),
+                headers: getAuthHeaders(token, options?.headers),
                 cache: "no-store",
             }
         );
@@ -112,7 +107,7 @@ class CartApiService {
             {
                 ...options,
                 method: "DELETE",
-                headers: this.getAuthHeaders(token, options?.headers),
+                headers: getAuthHeaders(token, options?.headers),
                 cache: "no-store",
             }
         );
@@ -130,7 +125,7 @@ class CartApiService {
             `${this.baseUrl}/api/v1/cart/count`,
             {
                 ...options,
-                headers: this.getAuthHeaders(token, options?.headers),
+                headers: getAuthHeaders(token, options?.headers),
                 cache: "no-store",
             }
         );

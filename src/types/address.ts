@@ -1,6 +1,5 @@
 export interface Address {
     addressId?: number;
-    customerId?: number;
     addressLine1: string;
     addressLine2?: string;
     city: string;

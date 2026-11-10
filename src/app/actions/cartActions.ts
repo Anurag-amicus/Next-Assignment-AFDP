@@ -212,10 +212,10 @@ export async function clearCartAction(): Promise<CartActionResult> {
 }
 
 /**
- * Fast lookup for cart item count (used by Header and CartContext on initial page load / refresh).
+ * Fast lookup for cart item count (used by Header on initial page load / refresh).
  */
 export async function getCartCountAction(): Promise<number> {
-    const session = await getSession();
+    const session = await getSession(); 
     if (!session.isAuthenticated || !session.accessToken) {
         return 0;
     }

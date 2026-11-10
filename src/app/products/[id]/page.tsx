@@ -6,6 +6,7 @@ import AddToCartSection from "@/components/products/AddToCartSection";
 import { productApiService } from "@/services/productApiServices";
 import { transformProduct } from "@/utils/dataTransformation";
 import type { Metadata } from "next";
+import Rating from "@/components/common/Rating";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -45,9 +46,8 @@ export async function generateMetadata({
             const product = transformProduct(res.data);
             return {
                 title: `${product.name} | Online Express`,
-                description: `Buy ${product.name} at the best price on Online Express. ${
-                    product.description || ""
-                }`.trim(),
+                description: `Buy ${product.name} at the best price on Online Express. ${product.description || ""
+                    }`.trim(),
             };
         }
     } catch (error) {
@@ -81,8 +81,7 @@ export default async function ProductDetailPage({
     }
 
     const product = transformProduct(res.data);
-    const fullStars = Math.floor(product.rating);
-    const emptyStars = 5 - fullStars;
+
 
     return (
         <div className="w-full pt-4.5 px-6 pb-15 max-[520px]:pt-7 max-[520px]:px-4 max-[520px]:pb-10">
@@ -95,8 +94,8 @@ export default async function ProductDetailPage({
                         label: product
                             ? product.name
                             : id
-                            ? `Product #${id}`
-                            : "Product",
+                                ? `Product #${id}`
+                                : "Product",
                     },
                 ]}
             />
@@ -146,13 +145,9 @@ export default async function ProductDetailPage({
                     </h1>
 
                     {/* Ratings */}
+
                     <div className="flex items-center gap-2 mb-4">
-                        <span className="text-orange text-lg leading-none tracking-[-1px]">
-                            {"★".repeat(fullStars)}
-                            <span className="text-gray-200">
-                                {"★".repeat(emptyStars)}
-                            </span>
-                        </span>
+                        <Rating rating={product.rating} />
                         <span className="text-xs font-semibold text-charcoal">
                             {product.rating.toFixed(1)} / 5.0
                         </span>

@@ -5,7 +5,6 @@ import toast from "react-hot-toast";
 import QuantitySelector from "@/components/common/QuantitySelector";
 import Button from "@/components/common/Button";
 import { addToCartAction } from "@/app/actions/cartActions";
-import { notifyCartUpdated } from "@/utils/cartUtils";
 import type { Product } from "@/types/product";
 
 export interface AddToCartSectionProps {
@@ -28,7 +27,6 @@ export default function AddToCartSection({
             if (res.requireAuth) {
                 toast("Please log in to add products to your cart.", { icon: "⚠️" });
             } else if (res.success) {
-                notifyCartUpdated(res.count);
                 toast.success(res.message || `Added ${quantity} item(s) to your cart!`);
                 setAddedSuccess(true);
                 setTimeout(() => setAddedSuccess(false), 2500);

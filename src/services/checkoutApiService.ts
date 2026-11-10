@@ -5,8 +5,9 @@ import type {
     MockPaymentResponse,
 } from "../types/checkout";
 import type { ApiResult } from "../types/api";
+import type { AuthRequest } from "@/types/auth";
 import { apiRequest } from "./apiClient";
-
+import getAuthHeaders from "@/utils/authHelper";
 class CheckoutApiService {
     private readonly baseUrl: string;
 
@@ -18,34 +19,24 @@ class CheckoutApiService {
 
     async checkout(
         data: CheckoutRequest,
-        token: string,
-        options?: RequestInit
+        { token, options }: AuthRequest,
     ): Promise<ApiResult<CheckoutResponse>> {
         return apiRequest<CheckoutResponse>(`${this.baseUrl}/api/v1/checkout`, {
             ...options,
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-                ...options?.headers,
-            },
+            headers: getAuthHeaders(token, options?.headers),
             body: JSON.stringify(data),
         });
     }
 
     async mockPayment(
         data: MockPaymentRequest,
-        token: string,
-        options?: RequestInit
+        { token, options }: AuthRequest,
     ): Promise<ApiResult<MockPaymentResponse>> {
         return apiRequest<MockPaymentResponse>(`${this.baseUrl}/api/payments/mock`, {
             ...options,
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-                ...options?.headers,
-            },
+            headers: getAuthHeaders(token, options?.headers),
             body: JSON.stringify(data),
         });
     }

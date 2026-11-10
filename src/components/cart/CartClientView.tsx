@@ -8,7 +8,6 @@ import {
     removeItemAction,
     clearCartAction,
 } from "@/app/actions/cartActions";
-import { notifyCartUpdated } from "@/utils/cartUtils";
 import toast from "react-hot-toast";
 import type { CartItem } from "@/types/cart";
 
@@ -32,7 +31,6 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
 
             if (res.success && res.items) {
                 setItems(res.items);
-                notifyCartUpdated(res.count);
             } else {
                 setError(res.error || "Failed to update item quantity.");
                 toast.error(res.error || "Failed to update item quantity.");
@@ -50,7 +48,6 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
 
             if (res.success && res.items) {
                 setItems(res.items);
-                notifyCartUpdated(res.count);
                 toast.success("Item removed from cart.");
             } else {
                 setError(res.error || "Failed to remove item.");
@@ -69,7 +66,6 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
 
             if (res.success) {
                 setItems([]);
-                notifyCartUpdated(0);
                 toast.success("Cart cleared.");
             } else {
                 setError(res.error || "Failed to clear cart.");

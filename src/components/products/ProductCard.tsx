@@ -10,7 +10,8 @@ import QuantitySelector from "@/components/common/QuantitySelector";
 
 import toast from "react-hot-toast";
 import { addToCartAction } from "@/app/actions/cartActions";
-import { notifyCartUpdated } from "@/utils/cartUtils";
+import Rating from "../common/Rating";
+import defaultImage from  "@/assets/product-placeholder.svg"
 
 const ProductCard = memo(function ProductCard({
     id,
@@ -33,7 +34,6 @@ const ProductCard = memo(function ProductCard({
             if (res.requireAuth) {
                 toast("Please log in to add products to your cart.", { icon: "⚠️" });
             } else if (res.success) {
-                notifyCartUpdated(res.count);
                 toast.success(res.message || `Added ${quantity} item(s) to cart!`);
             } else {
                 toast.error(res.error || "Failed to add to cart.");
@@ -42,9 +42,6 @@ const ProductCard = memo(function ProductCard({
             setIsAdding(false);
         }
     };
-
-    const fullStars = Math.floor(rating);
-    const emptyStars = 5 - fullStars;
 
     return (
         <Card
@@ -58,7 +55,7 @@ const ProductCard = memo(function ProductCard({
                     aria-label={`View details for ${name}`}
                 >
                     <Image
-                        src={imageUrl || "/product-placeholder.svg"}
+                        src={imageUrl || defaultImage}
                         alt={name}
                         width={220}
                         height={220}
@@ -86,16 +83,9 @@ const ProductCard = memo(function ProductCard({
                     </span>
 
                     <div className="flex items-center justify-center gap-1.5 mb-3.75">
-                        <span className="text-orange text-lg font-bold leading-none tracking-[-2px]">
-                            {"★".repeat(fullStars)}
-
-                            <span className="text-gray-200">
-                                {"★".repeat(emptyStars)}
-                            </span>
-                        </span>
-
+                        <Rating rating={rating} />
                         <span className="ml-0.5 text-muted text-xs font-medium leading-none">
-                            {rating.toFixed(1)} (1)
+                            {rating.toFixed(1)}
                         </span>
                     </div>
 

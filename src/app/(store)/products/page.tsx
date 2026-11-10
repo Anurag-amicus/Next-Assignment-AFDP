@@ -53,6 +53,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     });
 
     if (!response.success) {
+        console.log(`error: ${response.error}`)
         throw new Error(response.error || "Failed to load product catalog from server.");
     }
 

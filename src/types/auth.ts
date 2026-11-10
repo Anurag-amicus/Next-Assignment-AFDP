@@ -26,7 +26,6 @@ export type User = Pick<AuthResponse, "customerId" | "name" | "role"> & {
 };
 
 export interface SessionData {
-    user: User | null;
     accessToken: string | null;
     isAuthenticated: boolean;
 }
@@ -37,3 +36,16 @@ export interface AuthActionState {
     fieldErrors?: Record<string, string>;
     inputs?: Record<string, string>;
 }
+
+
+export interface AuthRequest {
+    token: string,
+    options?: RequestInit;
+}
+
+export const defaultUser: User = {
+    customerId: Number(process.env.DEFAULT_USER_CUSTOMER_ID) || 1,
+    name: process.env.DEFAULT_USER_NAME || "John Doe",
+    role: process.env.DEFAULT_USER_ROLE || "Customer",
+    email: process.env.DEFAULT_USER_EMAIL || "john.doe@example.com",
+};

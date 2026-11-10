@@ -4,13 +4,13 @@ import { authApiService } from "@/services/authApiService";
 import {
     COOKIE_ACCESS_TOKEN,
     COOKIE_REFRESH_TOKEN,
-    COOKIE_AUTH_USER,
     ACCESS_TOKEN_MAX_AGE,
     REFRESH_TOKEN_MAX_AGE,
+    COOKIE_BASE_CONFIG ,
 } from "@/lib/session";
 
 const PROTECTED_ROUTES = ["/checkout", "/orders", "/dashboard", "/cart"];
-const COOKIE_BASE = { httpOnly: true, secure: true, sameSite: "lax" as const, path: "/" };
+
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
     const start = performance.now();
@@ -53,8 +53,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
                 );
 
                 const response = NextResponse.next({ request: { headers: requestHeaders } });
-                response.cookies.set(COOKIE_ACCESS_TOKEN, res.data.token, { ...COOKIE_BASE, maxAge: ACCESS_TOKEN_MAX_AGE });
-                response.cookies.set(COOKIE_REFRESH_TOKEN, res.data.refreshToken, { ...COOKIE_BASE, maxAge: REFRESH_TOKEN_MAX_AGE });
+                response.cookies.set(COOKIE_ACCESS_TOKEN, res.data.token, { ...COOKIE_BASE_CONFIG, maxAge: ACCESS_TOKEN_MAX_AGE });
+                response.cookies.set(COOKIE_REFRESH_TOKEN, res.data.refreshToken, { ...COOKIE_BASE_CONFIG, maxAge: REFRESH_TOKEN_MAX_AGE });
                 return log(response);
             }
         }
@@ -65,7 +65,6 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
             const response = NextResponse.redirect(loginUrl);
             response.cookies.delete(COOKIE_ACCESS_TOKEN);
             response.cookies.delete(COOKIE_REFRESH_TOKEN);
-            response.cookies.delete(COOKIE_AUTH_USER);
             return log(response);
         }
     }

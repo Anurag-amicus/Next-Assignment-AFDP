@@ -1,5 +1,7 @@
+import getAuthHeaders from "@/utils/authHelper";
 import type { ApiResult } from "../types/api";
 import type { ProductPagedResponse } from "../types/pagination";
+import type { AuthRequest } from "@/types/auth";
 import type {
     ProductResponse,
     ProductQueryParams,
@@ -9,6 +11,7 @@ import type {
     BrandResponse,
 } from "../types/product";
 import { apiRequest } from "./apiClient";
+
 
 class ProductApiService {
     private readonly baseUrl: string;
@@ -72,15 +75,14 @@ class ProductApiService {
      */
     async createProduct(
         payload: ProductCreateInput,
-        options?: RequestInit
+        { token, options }: AuthRequest,
     ): Promise<ApiResult<ProductResponse>> {
+        const headers = getAuthHeaders(token, options?.headers);
+        headers.set("Content-Type", "application/json");
         return apiRequest<ProductResponse>(`${this.baseUrl}/api/v1/Products`, {
             ...options,
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(options?.headers ? Object.fromEntries(new Headers(options.headers).entries()) : {}),
-            },
+            headers,
             body: JSON.stringify(payload),
         });
     }
@@ -89,17 +91,16 @@ class ProductApiService {
      * PUT /api/v1/Products/{id}
      */
     async updateProduct(
-        id: number | string,
+        id: number,
         payload: ProductUpdateInput,
-        options?: RequestInit
+        { token, options }: AuthRequest,
     ): Promise<ApiResult<ProductResponse>> {
+        const headers = getAuthHeaders(token, options?.headers);
+        headers.set("Content-Type", "application/json");
         return apiRequest<ProductResponse>(`${this.baseUrl}/api/v1/Products/${id}`, {
             ...options,
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                ...(options?.headers ? Object.fromEntries(new Headers(options.headers).entries()) : {}),
-            },
+            headers,
             body: JSON.stringify(payload),
         });
     }
@@ -108,13 +109,16 @@ class ProductApiService {
      * DELETE /api/v1/Products/{id}
      */
     async deleteProduct(
-        id: number | string,
-        options?: RequestInit
+        id: number,
+        { token, options }: AuthRequest,
     ): Promise<ApiResult<{ message?: string } | null>> {
+        const headers = getAuthHeaders(token, options?.headers);
+        headers.set("Content-Type", "application/json");
         return apiRequest<{ message?: string } | null>(
             `${this.baseUrl}/api/v1/Products/${id}`,
             {
                 ...options,
+                headers,
                 method: "DELETE",
             }
         );

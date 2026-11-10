@@ -1,6 +1,4 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import DashboardWelcomeBanner from "@/components/dashboard/DashboardWelcomeBanner";
 import AccountSummarySection from "@/components/dashboard/AccountSummarySection";
@@ -14,21 +12,16 @@ export const metadata = {
 };
 
 export default async function DashboardPage() {
-    const session = await getSession();
-
-    if (!session.user) {
-        redirect("/login?returnUrl=/dashboard");
-    }
-
+    
     return (
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 overflow-x-hidden min-w-0">
             <Breadcrumb className="mb-6" />
 
-            <DashboardWelcomeBanner user={session.user} />
+            <DashboardWelcomeBanner/>
 
             <div className="flex flex-col gap-2">
                 <Suspense fallback={<AccountSummarySkeleton />}>
-                    <AccountSummarySection user={session.user} />
+                    <AccountSummarySection />
                 </Suspense>
 
                 <Suspense fallback={<RecentOrdersSkeleton />}>

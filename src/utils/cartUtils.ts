@@ -16,16 +16,3 @@ export function calculateCartSubtotal(items: CartItem[]): number {
         0
     );
 }
-
-/**
- * Dispatches a client-side event so Header and other components update reactively.
- */
-export function notifyCartUpdated(count?: number): void {
-    if (typeof window !== "undefined") {
-        window.dispatchEvent(
-            new CustomEvent("cart:updated", {
-                detail: { count },
-            })
-        );
-    }
-}

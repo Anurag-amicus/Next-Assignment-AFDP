@@ -5,9 +5,12 @@ import type {
     ShippingField,
 } from "@/types/shipping";
 
+export const orderIdSchema = z.number().int().positive();
+
 /**
  * Zod validation schema for shipping form data matching React assignment rules.
  */
+
 export const shippingSchema = z.object({
     fullName: z
         .string()
@@ -93,3 +96,4 @@ export function validateShippingForm(
     }
     return errors;
 }
+

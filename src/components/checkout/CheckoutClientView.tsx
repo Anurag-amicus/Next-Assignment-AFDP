@@ -9,7 +9,6 @@ import PaymentStep from "./PaymentStep";
 import ReviewStep from "./ReviewStep";
 import CheckoutSummary from "./CheckoutSummary";
 import { placeOrderAction } from "@/app/actions/orderActions";
-import { notifyCartUpdated } from "@/utils/cartUtils";
 import { initialShippingForm } from "@/types/shipping";
 import type { CartItem } from "@/types/cart";
 import type { Address } from "@/types/address";
@@ -112,8 +111,6 @@ export default function CheckoutClientView({
                 }
 
                 if (res.success) {
-                    // Update header cart badge to 0 immediately
-                    notifyCartUpdated(0);
                     toast.success(res.message || "Order placed successfully! Thank you for your purchase.");
                     router.push("/orders");
                 } else {

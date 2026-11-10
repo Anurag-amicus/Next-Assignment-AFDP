@@ -10,10 +10,8 @@ import type {
  */
 export function buildAddressPayload(
     data: ShippingFormData,
-    customerId?: number
 ): Address {
     return {
-        customerId,
         addressLine1: data.streetAddress,
         addressLine2: data.aptSuite || "",
         city: data.city,

@@ -51,24 +51,9 @@ export default function HeaderClient({
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-        let isMounted = true;
-
-        const handleCartUpdate = (e: Event) => {
-            const custom = e as CustomEvent<{ count?: number }>;
-            if (typeof custom.detail?.count === "number") {
-                setCurrentCartCount(custom.detail.count);
-            } else {
-                getCartCountAction().then((count) => {
-                    if (isMounted) setCurrentCartCount(count);
-                });
-            }
-        };
-
-        window.addEventListener("cart:updated", handleCartUpdate);
-        return () => {
-            isMounted = false;
-            window.removeEventListener("cart:updated", handleCartUpdate);
-        };
+                getCartCountAction().then((count) => { setCurrentCartCount(count);});
+                console.log(`cart count update: ${currentCartCount}` )
+   
     }, []);
 
     const isProductListingPage = pathname === "/products";

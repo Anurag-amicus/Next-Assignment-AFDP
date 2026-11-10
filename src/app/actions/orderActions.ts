@@ -5,14 +5,21 @@ import { getSession } from "@/lib/session";
 import { cartApiService } from "@/services/cartApiService";
 import { addressApiService } from "@/services/addressApiService";
 import { checkoutApiService } from "@/services/checkoutApiService";
-import { shippingSchema } from "@/lib/validations/shippingSchema";
+import { orderApiService } from "@/services/orderApiService";
+import { shippingSchema , orderIdSchema} from "@/lib/validations/shippingSchema";
 import { buildAddressPayload } from "@/utils/shippingHelpers";
 import type { ShippingFormData } from "@/types/shipping";
+import type { OrderDetail } from "@/types/order";
 
 export interface PlaceOrderInput {
     shippingData: ShippingFormData;
     addressId?: number | null;
     paymentMethod?: string;
+}
+
+export interface ReorderState {
+    success: boolean;
+    message: string;
 }
 
 export interface PlaceOrderResult {
@@ -75,7 +82,7 @@ export async function placeOrderAction(input: PlaceOrderInput): Promise<PlaceOrd
 
         // 4. Ensure Address exists in backend
         if (!addressId) {
-            const addressPayload = buildAddressPayload(validShipping, session.user?.customerId);
+            const addressPayload = buildAddressPayload(validShipping);
             const createAddrRes = await addressApiService.createAddress(
                 addressPayload,
                 session.accessToken
@@ -96,7 +103,7 @@ export async function placeOrderAction(input: PlaceOrderInput): Promise<PlaceOrd
                     shippingMethod: validShipping.shippingMethod,
                     paymentMethod,
                 },
-                session.accessToken
+                {token:session.accessToken}
             );
 
             if (checkoutRes.success && checkoutRes.data?.orderId) {
@@ -108,7 +115,7 @@ export async function placeOrderAction(input: PlaceOrderInput): Promise<PlaceOrd
                         orderId,
                         paymentMethod,
                     },
-                    session.accessToken
+                    {token:session.accessToken}
                 );
             }
         }
@@ -131,6 +138,96 @@ export async function placeOrderAction(input: PlaceOrderInput): Promise<PlaceOrd
         return {
             success: false,
             error: err instanceof Error ? err.message : "An unexpected error occurred during order placement.",
+        };
+    }
+}
+
+
+
+
+export async function reorderAction(orderId: number): Promise<ReorderState> {
+    const session = await getSession();
+
+    if (!session.isAuthenticated || !session.accessToken) {
+        return { success: false, message: "Please log in to reorder." };
+    }
+
+    const parsed = orderIdSchema.safeParse(orderId);
+
+    if (!parsed.success) {
+        return { success: false, message: "Invalid order." };
+    }
+
+    try {
+        const res = await orderApiService.reorder(
+            { token: session.accessToken },
+            parsed.data
+        );
+
+        if (!res.success) {
+            return {
+                success: false,
+                message: res.error ?? "Unable to reorder. Please try again.",
+            };
+        }
+
+        revalidatePath("/cart");
+
+        return {
+            success: true,
+            message: res.data?.message ?? "Items added to your cart successfully.",
+        };
+    } catch (err) {
+        console.error("reorderAction error:", err);
+
+        return {
+            success: false,
+            message: "Something went wrong. Please try again.",
+        };
+    }
+}
+
+export interface OrderDetailsActionResult {
+    success: boolean;
+    data?: OrderDetail | null;
+    error?: string;
+}
+
+export async function getOrderDetailsAction(
+    orderId: number
+): Promise<OrderDetailsActionResult> {
+    const session = await getSession();
+
+    if (!session.isAuthenticated || !session.accessToken) {
+        return { success: false, error: "Please log in to view order details." };
+    }
+
+    if (!orderId || typeof orderId !== "number" || orderId <= 0 || !Number.isInteger(orderId)) {
+        return { success: false, error: "Invalid order reference." };
+    }
+
+    try {
+        const res = await orderApiService.getOrderById(
+            { token: session.accessToken },
+            orderId
+        );
+
+        if (!res.success) {
+            return {
+                success: false,
+                error: res.error || `Order #${orderId} could not be found.`,
+            };
+        }
+
+        return {
+            success: true,
+            data: res.data,
+        };
+    } catch (err) {
+        console.error("getOrderDetailsAction error:", err);
+        return {
+            success: false,
+            error: "An unexpected error occurred while fetching order details.",
         };
     }
 }

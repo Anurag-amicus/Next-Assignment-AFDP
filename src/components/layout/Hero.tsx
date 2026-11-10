@@ -1,7 +1,9 @@
+
 "use client";
 
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
@@ -11,7 +13,7 @@ function Hero() {
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
 
-    const handleSearchSubmit = (e: FormEvent) => {
+    const handleSearchSubmit = (e: SubmitEvent) => {
         e.preventDefault();
         const trimmed = searchQuery.trim();
         if (trimmed) {
@@ -24,11 +26,22 @@ function Hero() {
     return (
         <section
             className="relative w-full min-h-125 py-17.5 px-[7%] flex items-center justify-start text-left bg-cover bg-no-repeat bg-center max-[900px]:min-h-115 max-[900px]:py-15 max-[900px]:px-[6%] max-[768px]:min-h-125 max-[768px]:py-13.75 max-[768px]:px-6 max-[768px]:items-start max-[768px]:bg-position-[65%_center] max-[480px]:min-h-117.5 max-[480px]:py-11.25 max-[480px]:px-4.5 max-[480px]:bg-position-[68%_center]"
-            style={{
-                backgroundImage: `linear-gradient(90deg, rgba(255, 248, 238, 0.92) 0%, rgba(255, 248, 238, 0.65) 55%, rgba(255, 248, 238, 0.15) 100%), url(/herosection.png)`,
-            }}
         >
-            <div className="w-full max-w-155 flex flex-col items-start max-[768px]:max-w-140 max-[768px]:pt-6.25 max-[480px]:pt-3.75">
+            {/* Hero Background Image */}
+            <Image
+                src="/herosection.png"
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                className="object-cover object-center max-[768px]:object-[65%_center] max-[480px]:object-[68%_center]"
+            />
+
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-linear-to-r from-[#fff8ee]/92 via-[#fff8ee]/65 to-[#fff8ee]/15" />
+
+            {/* Hero Content */}
+            <div className="relative z-10 w-full max-w-155 flex flex-col items-start max-[768px]:max-w-140 max-[768px]:pt-6.25 max-[480px]:pt-3.75">
                 <p className="m-0 mb-2 text-orange font-display text-sm font-extrabold tracking-widest uppercase max-[480px]:text-xs max-[480px]:mb-3">
                     ONLINE EXPRESS
                 </p>
