@@ -1,6 +1,7 @@
 import { memo } from "react";
 import Image from "next/image";
 import QuantitySelector from "@/components/common/QuantitySelector";
+import { SHIMMER_BLUR_DATA_URL } from "@/utils/imageUtils";
 import type { CartItem as CartItemType } from "@/types/cart";
 
 export interface CartItemProps {
@@ -31,6 +32,8 @@ const CartItem = memo(function CartItem({
                         className="h-full w-full object-contain"
                         width={50}
                         height={50}
+                        placeholder="blur"
+                        blurDataURL={SHIMMER_BLUR_DATA_URL}
                     />
                 </div>
                 <div className="min-w-0 flex-1">

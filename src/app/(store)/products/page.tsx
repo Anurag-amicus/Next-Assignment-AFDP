@@ -4,13 +4,28 @@ import Pagination from "@/components/common/Pagination";
 import { productApiService } from "@/services/productApiServices";
 import { transformProducts } from "@/utils/dataTransformation";
 import type { ProductQueryParams, Product, ProductsPageProps } from "@/types/product";
+import type { Metadata } from "next";
 
 export const revalidate = 60;
 
-export const metadata = {
-    title: "Product Listing | Online Express",
-    description: "Explore our extensive collection of quality products, top deals, and curated categories.",
-};
+export async function generateMetadata({
+    searchParams,
+}: ProductsPageProps): Promise<Metadata> {
+    const resolved = await searchParams;
+    const query = resolved.search?.trim();
+
+    if (query) {
+        return {
+            title: `Search: "${query}"`,
+            description: `Explore product search results for "${query}" on Online Express.`,
+        };
+    }
+
+    return {
+        title: "Product Catalog",
+        description: "Explore our extensive collection of quality products, top deals, and curated categories on Online Express.",
+    };
+}
 
 
 

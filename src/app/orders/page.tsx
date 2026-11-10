@@ -9,8 +9,8 @@ import Breadcrumb from "@/components/common/Breadcrumb";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "My Orders | Online Express",
-    description: "View and manage your recent orders, track shipments, and reorder past purchases.",
+    title: "My Orders",
+    description: "View and manage your recent orders, track shipments, and reorder past purchases on Online Express.",
 };
 
 interface OrdersPageProps {

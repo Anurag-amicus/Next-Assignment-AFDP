@@ -1,0 +1,222 @@
+
+{
+  "orders": [
+    {
+      "orderId": 1005,
+      "customerId": 101,
+      "subtotal": 2499.00,
+      "shippingCharge": 50.00,
+      "tax": 199.92,
+      "totalAmount": 2748.92,
+      "orderStatus": "Processing",
+      "createdAt": "2026-11-08T10:30:00Z",
+      "items": [
+        {
+          "orderItemId": 5010,
+          "productId": 201,
+          "productName": "Wireless Bluetooth Headphones",
+          "quantity": 1,
+          "price": 1499.00,
+          "itemSubtotal": 1499.00,
+          "imageUrl": "/images/headphones.jpg"
+        },
+        {
+          "orderItemId": 5011,
+          "productId": 202,
+          "productName": "USB-C Fast Charging Cable",
+          "quantity": 2,
+          "price": 500.00,
+          "itemSubtotal": 1000.00,
+          "imageUrl": "/images/usb-c-cable.jpg"
+        }
+      ],
+      "shipping": {
+        "fullName": "Anurag Chandra",
+        "streetAddress": "42 MG Road",
+        "aptSuite": "Apartment 302",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "zip": "411001",
+        "country": "India"
+      },
+      "payment": {
+        "paymentId": 7010,
+        "orderId": 1005,
+        "paymentStatus": "Paid",
+        "paymentMethod": "UPI",
+        "amount": 2748.92,
+        "transactionReference": "TXN-UPI-20261108001",
+        "createdAt": "2026-11-08T10:30:05Z"
+      }
+    },
+    {
+      "orderId": 1004,
+      "customerId": 101,
+      "subtotal": 3499.00,
+      "shippingCharge": 0.00,
+      "tax": 279.92,
+      "totalAmount": 3778.92,
+      "orderStatus": "Shipped",
+      "createdAt": "2026-11-05T14:20:00Z",
+      "items": [
+        {
+          "orderItemId": 5008,
+          "productId": 203,
+          "productName": "Mechanical Gaming Keyboard",
+          "quantity": 1,
+          "price": 2499.00,
+          "itemSubtotal": 2499.00,
+          "imageUrl": "/images/keyboard.jpg"
+        },
+        {
+          "orderItemId": 5009,
+          "productId": 204,
+          "productName": "Wireless Mouse",
+          "quantity": 1,
+          "price": 1000.00,
+          "itemSubtotal": 1000.00,
+          "imageUrl": "/images/mouse.jpg"
+        }
+      ],
+      "shipping": {
+        "fullName": "Anurag Chandra",
+        "streetAddress": "42 MG Road",
+        "aptSuite": "Apartment 302",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "zip": "411001",
+        "country": "India"
+      },
+      "payment": {
+        "paymentId": 7009,
+        "orderId": 1004,
+        "paymentStatus": "Paid",
+        "paymentMethod": "Credit Card",
+        "amount": 3778.92,
+        "transactionReference": "TXN-CC-20261105002",
+        "createdAt": "2026-11-05T14:20:05Z"
+      }
+    },
+    {
+      "orderId": 1003,
+      "customerId": 101,
+      "subtotal": 1299.00,
+      "shippingCharge": 50.00,
+      "tax": 103.92,
+      "totalAmount": 1452.92,
+      "orderStatus": "Delivered",
+      "createdAt": "2026-10-28T09:15:00Z",
+      "items": [
+        {
+          "orderItemId": 5007,
+          "productId": 205,
+          "productName": "Smart Fitness Band",
+          "quantity": 1,
+          "price": 1299.00,
+          "itemSubtotal": 1299.00,
+          "imageUrl": "/images/fitness-band.jpg"
+        }
+      ],
+      "shipping": {
+        "fullName": "Anurag Chandra",
+        "streetAddress": "42 MG Road",
+        "aptSuite": "Apartment 302",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "zip": "411001",
+        "country": "India"
+      },
+      "payment": {
+        "paymentId": 7008,
+        "orderId": 1003,
+        "paymentStatus": "Paid",
+        "paymentMethod": "Cash on Delivery",
+        "amount": 1452.92,
+        "transactionReference": "COD-1003",
+        "createdAt": "2026-10-28T09:15:05Z"
+      }
+    },
+    {
+      "orderId": 1002,
+      "customerId": 101,
+      "subtotal": 5999.00,
+      "shippingCharge": 0.00,
+      "tax": 479.92,
+      "totalAmount": 6478.92,
+      "orderStatus": "Cancelled",
+      "createdAt": "2026-10-20T16:45:00Z",
+      "items": [
+        {
+          "orderItemId": 5006,
+          "productId": 206,
+          "productName": "Smart Watch",
+          "quantity": 1,
+          "price": 5999.00,
+          "itemSubtotal": 5999.00,
+          "imageUrl": "/images/smart-watch.jpg"
+        }
+      ],
+      "shipping": {
+        "fullName": "Anurag Chandra",
+        "streetAddress": "42 MG Road",
+        "aptSuite": "Apartment 302",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "zip": "411001",
+        "country": "India"
+      },
+      "payment": {
+        "paymentId": 7007,
+        "orderId": 1002,
+        "paymentStatus": "Refunded",
+        "paymentMethod": "Debit Card",
+        "amount": 6478.92,
+        "transactionReference": "TXN-DC-20261020003",
+        "createdAt": "2026-10-20T16:45:05Z"
+      }
+    },
+    {
+      "orderId": 1001,
+      "customerId": 101,
+      "subtotal": 899.00,
+      "shippingCharge": 50.00,
+      "tax": 71.92,
+      "totalAmount": 1020.92,
+      "orderStatus": "Delivered",
+      "createdAt": "2026-10-12T11:00:00Z",
+      "items": [
+        {
+          "orderItemId": 5005,
+          "productId": 207,
+          "productName": "Cotton Casual T-Shirt",
+          "quantity": 2,
+          "price": 449.50,
+          "itemSubtotal": 899.00,
+          "imageUrl": "/images/tshirt.jpg"
+        }
+      ],
+      "shipping": {
+        "fullName": "Anurag Chandra",
+        "streetAddress": "42 MG Road",
+        "aptSuite": "Apartment 302",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "zip": "411001",
+        "country": "India"
+      },
+      "payment": {
+        "paymentId": 7006,
+        "orderId": 1001,
+        "paymentStatus": "Paid",
+        "paymentMethod": "UPI",
+        "amount": 1020.92,
+        "transactionReference": "TXN-UPI-20261012004",
+        "createdAt": "2026-10-12T11:00:05Z"
+      }
+    }
+  ],
+  "totalRecords": 5,
+  "totalPages": 1,
+  "page": 1,
+  "pageSize": 10
+}

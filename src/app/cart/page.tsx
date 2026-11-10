@@ -6,7 +6,7 @@ import type { CartItem } from "@/types/cart";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Shopping Cart | Online Express",
+    title: "Shopping Cart",
     description: "Review your shopping cart, manage item quantities, and proceed to checkout on Online Express.",
 };
 

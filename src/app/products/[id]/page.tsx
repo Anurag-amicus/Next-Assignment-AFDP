@@ -7,6 +7,7 @@ import { productApiService } from "@/services/productApiServices";
 import { transformProduct } from "@/utils/dataTransformation";
 import type { Metadata } from "next";
 import Rating from "@/components/common/Rating";
+import { SHIMMER_BLUR_DATA_URL } from "@/utils/imageUtils";
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -45,7 +46,7 @@ export async function generateMetadata({
         if (res.success && res.data) {
             const product = transformProduct(res.data);
             return {
-                title: `${product.name} | Online Express`,
+                title: product.name,
                 description: `Buy ${product.name} at the best price on Online Express. ${product.description || ""
                     }`.trim(),
             };
@@ -55,7 +56,7 @@ export async function generateMetadata({
     }
 
     return {
-        title: "Product Details | Online Express",
+        title: "Product Details",
         description: "View product details and specifications on Online Express.",
     };
 }
@@ -120,7 +121,9 @@ export default async function ProductDetailPage({
                         alt={product.name}
                         width={320}
                         height={320}
-                        unoptimized
+                        placeholder="blur"
+                        blurDataURL={SHIMMER_BLUR_DATA_URL}
+                        priority
                         className="max-h-80 max-w-full object-contain transition-transform duration-300 hover:scale-105"
                     />
                 </div>

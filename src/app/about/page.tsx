@@ -2,9 +2,10 @@ import Link from "next/link";
 import Button from "@/components/common/Button";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import AboutCard from "@/components/about/AboutCard";
+import type { Metadata } from "next";
 
-export const metadata = {
-    title: "About Us | Online Express",
+export const metadata: Metadata = {
+    title: "About Us",
     description:
         "Learn about Online Express, our story, innovation history, mission, values, and commitments to sustainability and customer excellence.",
 };

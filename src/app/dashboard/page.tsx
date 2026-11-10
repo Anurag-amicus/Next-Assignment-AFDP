@@ -5,10 +5,11 @@ import AccountSummarySection from "@/components/dashboard/AccountSummarySection"
 import AccountSummarySkeleton from "@/components/dashboard/AccountSummarySkeleton";
 import RecentOrdersSection from "@/components/dashboard/RecentOrdersSection";
 import RecentOrdersSkeleton from "@/components/dashboard/RecentOrdersSkeleton";
+import type { Metadata } from "next";
 
-export const metadata = {
-    title: "Dashboard | Online Express",
-    description: "Manage your personal profile, default shipping address, and review your recent orders.",
+export const metadata: Metadata = {
+    title: "Dashboard",
+    description: "Manage your personal profile, default shipping address, and review your recent orders on Online Express.",
 };
 
 export default async function DashboardPage() {

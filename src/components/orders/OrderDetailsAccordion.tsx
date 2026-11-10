@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { SHIMMER_BLUR_DATA_URL } from "@/utils/imageUtils";
 import type { OrderDetail } from "@/types/order";
 import defaultImage from "@/assets/product-placeholder.svg";
 
@@ -111,6 +112,8 @@ export function OrderDetailsAccordion({ order }: OrderDetailsAccordionProps) {
                                     alt={item.productName}
                                     width={40}
                                     height={40}
+                                    placeholder="blur"
+                                    blurDataURL={SHIMMER_BLUR_DATA_URL}
                                     className="w-10 h-10 object-contain p-0.5 bg-white border border-border rounded-xs shrink-0"
                                 />
                                 <div className="min-w-0">

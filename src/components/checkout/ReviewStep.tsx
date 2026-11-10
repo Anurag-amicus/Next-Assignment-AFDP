@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { SHIMMER_BLUR_DATA_URL } from "@/utils/imageUtils";
 import type { ReviewStepProps } from "@/types/checkout";
 
 export function ReviewStep({
@@ -55,6 +56,8 @@ export function ReviewStep({
                                             alt={item.productName}
                                             width={36}
                                             height={36}
+                                            placeholder="blur"
+                                            blurDataURL={SHIMMER_BLUR_DATA_URL}
                                             className="w-full h-full object-contain"
                                         />
                                     </div>

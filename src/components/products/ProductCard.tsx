@@ -11,7 +11,8 @@ import QuantitySelector from "@/components/common/QuantitySelector";
 import toast from "react-hot-toast";
 import { addToCartAction } from "@/app/actions/cartActions";
 import Rating from "../common/Rating";
-import defaultImage from  "@/assets/product-placeholder.svg"
+import defaultImage from "@/assets/product-placeholder.svg";
+import { SHIMMER_BLUR_DATA_URL } from "@/utils/imageUtils";
 
 const ProductCard = memo(function ProductCard({
     id,
@@ -59,7 +60,8 @@ const ProductCard = memo(function ProductCard({
                         alt={name}
                         width={220}
                         height={220}
-                        unoptimized
+                        placeholder="blur"
+                        blurDataURL={SHIMMER_BLUR_DATA_URL}
                         className="block w-full h-full object-contain object-center transition-transform duration-250 ease hover:scale-105"
                     />
                 </Link>

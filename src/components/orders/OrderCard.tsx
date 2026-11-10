@@ -8,6 +8,7 @@ import Button from "@/components/common/Button";
 import ReorderButton from "@/components/orders/ReorderButton";
 import OrderDetailsAccordion from "@/components/orders/OrderDetailsAccordion";
 import { getOrderDetailsAction } from "@/app/actions/orderActions";
+import { SHIMMER_BLUR_DATA_URL } from "@/utils/imageUtils";
 import type { OrderDetail } from "@/types/order";
 import defaultImage from "@/assets/product-placeholder.svg";
 
@@ -86,6 +87,8 @@ export default function OrderCard({ order }: { order: OrderDetail }) {
                             alt={item.productName}
                             width={64}
                             height={64}
+                            placeholder="blur"
+                            blurDataURL={SHIMMER_BLUR_DATA_URL}
                             className="w-16 h-16 object-cover border border-surface rounded bg-surface"
                         />
                     ))

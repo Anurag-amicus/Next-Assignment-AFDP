@@ -2,18 +2,6 @@ export type OrderStatus = "Processing" | "Shipped" | "Delivered" | "Cancelled";
 
 export type OrderFilterTab = "All Orders" | OrderStatus;
 
-export interface Order {
-    orderId: number;
-    orderDate: string; // ISO date string
-    status: OrderStatus;
-    items: OrderItem[];
-    itemCount: number;
-    totalAmount: number;
-    shippingAddress?: OrderShippingAddress;
-    shippingMethod?: string;
-    shippingCost?: number;
-    paymentMethod?: string;
-}
 export interface OrderItem {
     orderItemId: number;
     productId: number;

@@ -1,8 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-    --font-display: "Industry Test", sans-serif;
-    --font-display-medium: "Industry Test Medium", sans-serif;
+    --font-display: var(--font-industry), sans-serif;
 
     --color-black: #111111;
     --color-dark: #1f1f1f;
@@ -17,22 +16,6 @@
     --color-border-input: #c9c9c9;
     --color-surface: #eeeeee;
     --color-white: #ffffff;
-}
-
-@font-face {
-    font-family: "Industry Test";
-    src: url("/fonts/IndustryTest-Black.otf") format("opentype");
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Industry Test Medium";
-    src: url("/fonts/IndustryTest-Medium.otf") format("opentype");
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
 }
 
 @layer base {

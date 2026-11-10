@@ -8,8 +8,8 @@ import type { Metadata } from "next";
 import type { Country } from "@/types/geoData";
 
 export const metadata: Metadata = {
-    title: "Checkout | Online Express",
-    description: "Complete your order with secure shipping and payment options.",
+    title: "Checkout",
+    description: "Complete your order with secure shipping and payment options on Online Express.",
 };
 
 export default async function CheckoutPage() {

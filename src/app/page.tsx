@@ -5,10 +5,12 @@ import FeaturedCarousel from "@/components/products/FeaturedCarousel";
 import CategoryGrid from "@/components/products/CategoryGrid";
 import { FeaturedCarouselSkeleton } from "@/components/products/FeaturedCarouselSkeleton";
 import { CategoryGridSkeleton } from "@/components/products/CategoryGridSkeleton";
+import type { Metadata } from "next";
+
 export const revalidate = 60;
 
-export const metadata = {
-    title: "Home | Online Express",
+export const metadata: Metadata = {
+    title: "Home",
     description: "Welcome to Online Express - Discover top deals, featured categories, and premium products.",
 };
 

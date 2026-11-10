@@ -146,7 +146,7 @@ export default function HeaderClient({
                         href="/"
                         className="flex w-45 shrink-0 flex-col justify-center border-l border-border-dark pl-4.5 leading-none no-underline max-[1100px]:w-40 max-[768px]:w-auto max-[768px]:pl-2.5 max-[600px]:pl-2"
                     >
-                        <span className="ml-0.5 font-display-medium text-xs font-medium tracking-[3px] text-muted max-[768px]:text-[9px] max-[768px]:tracking-[2px] max-[600px]:text-[8px] max-[600px]:tracking-[1.5px]">
+                        <span className="ml-0.5 font-display text-xs font-medium tracking-[3px] text-muted max-[768px]:text-[9px] max-[768px]:tracking-[2px] max-[600px]:text-[8px] max-[600px]:tracking-[1.5px]">
                             ONLINE
                         </span>
                         <span className="font-display text-3xl font-extrabold tracking-tight text-charcoal max-[1100px]:text-2xl max-[768px]:text-xl max-[600px]:text-base">
