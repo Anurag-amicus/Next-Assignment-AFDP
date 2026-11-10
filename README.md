@@ -815,6 +815,65 @@ To ensure that the dashboard never triggers horizontal scrolling on any device (
 
 ---
 
+## 📦 Assignment 12: Order Listing Page
+
+### Objectives
+- Build a protected `/orders` page using an async Server Component with server-side authentication guards.
+- Integrate `orderApiService.getOrderHistory` with real-time status filtering (`All`, `Placed`, `Processing`, `Shipped`, `Delivered`, `Cancelled`).
+- Implement lazy-loaded order details via Server Action `getOrderDetailsAction(orderId)` using an interactive accordion.
+- Handle empty states gracefully with status-aware messaging and a direct catalog CTA.
+
+### ⚙️ Key Implementation Highlights
+1. **Server Component Architecture (`src/app/orders/page.tsx`)**: Validates session via `getSession()` and fetches order history directly with `normalizeOrderStatus(status)`.
+2. **Interactive Order Accordion (`src/components/orders/OrderCard.tsx`, `OrderDetailsAccordion.tsx`)**: Client component managing expand/collapse states; lazy-loads granular line items, pricing breakdowns, and shipping address on demand via Server Action.
+3. **Filter Navigation & Empty State (`src/components/orders/OrderFilterTabs.tsx`, `OrderEmptyState.tsx`)**: Synchronizes active tab via URL search parameters (`?status=...`) and renders dedicated empty states when no orders match.
+
+---
+
+## 🚨 Assignment 13: Error Handling & Loading Skeletons
+
+### Objectives
+- Implement comprehensive error recovery across the app using `error.tsx` with `reset()` and root `global-error.tsx`.
+- Design custom, on-brand 404 pages using `not-found.tsx` for missing pages and invalid products.
+- Provide responsive streaming loading skeletons (`loading.tsx`) across all major routes.
+- Eliminate invalid HTML5 nesting (buttons inside links) across the component tree.
+
+### ⚙️ Key Implementation Highlights
+1. **Tiered Error Recovery**:
+   - `src/app/global-error.tsx`: Root layout error boundary catching errors in the root layout itself, styled with Tailwind and theme tokens.
+   - `src/app/error.tsx` & route errors (`/products/[id]/error.tsx`, `/(store)/products/error.tsx`): Displays "Something went wrong" with industrial "Try Again" `reset()` button.
+2. **Custom 404 Pages**:
+   - `src/app/not-found.tsx`: Global branded 404 page with return-to-home navigation.
+   - `src/app/products/[id]/not-found.tsx`: Contextual 404 triggered when a non-existent or deleted product ID is requested.
+3. **Responsive Skeletons (`loading.tsx`)**:
+   - Added dedicated route-level skeletons for `/orders`, `/cart`, `/checkout`, and `(store)/products`.
+   - Reusable skeleton blocks designed for immediate visual feedback without layout jumps.
+4. **HTML5 Semantic Compliance**: Refactored `src/components/common/Button.tsx` to accept an optional `href` prop, rendering semantic Next.js `<Link>` elements and removing all illegal `<Link><Button>` nesting.
+
+---
+
+## ⚡ Assignment 14: Image, Font, and SEO Optimization
+
+### Objectives
+- Optimize typography using Next.js `next/font/local` with zero layout shift.
+- Serve all product images and thumbnails using `next/image` with responsive sizing and blur placeholders.
+- Implement comprehensive SEO metadata: dynamic `generateMetadata` for dynamic pages and static `metadata` for all static pages.
+- Ensure zero Cumulative Layout Shift (CLS: 0) across all views.
+
+### ⚙️ Key Implementation Highlights
+1. **Font Optimization (`next/font/local`)**:
+   - Configured local `Industry Test` font in `src/app/layout.tsx` mapping Medium (500), Bold (700), and Black (800) weights to CSS variable `--font-industry`.
+   - Self-hosted without external network dependencies, preloaded automatically with `display: "swap"`.
+2. **Responsive Images with Shimmer Blur (`next/image`)**:
+   - All product images (`ProductCard`, `ProductDetailPage`, `CartItem`, `ReviewStep`, `OrderCard`) utilize `next/image` with fixed aspect ratios and explicit dimensions.
+   - Configured `placeholder="blur"` paired with `SHIMMER_BLUR_DATA_URL` for smooth, shift-free loading states.
+   - Added `priority` to above-the-fold hero and product detail showcase images.
+3. **Metadata Strategy**:
+   - **Dynamic Pages**: `generateMetadata` implemented on `/products/[id]` (product name, description, OpenGraph) and `/products` (search query reflection).
+   - **Static Pages**: Exported static `metadata` with title templates (`%s | Online Express`) on `/`, `/about`, `/login`, `/register`, `/cart`, `/checkout`, `/dashboard`, and `/orders`.
+
+---
+
 ## 📁 Clean Folder Structure
 
 ```
@@ -845,13 +904,16 @@ src/
 │   │       └── [id]/
 │   │           └── route.ts          # GET (detail), PUT (update), DELETE (remove)
 │   ├── cart/
+│   │   ├── loading.tsx               # Route-level cart streaming skeleton
 │   │   └── page.tsx                  # Shopping Cart page (Server Component with SSR prefetch)
 │   ├── checkout/
+│   │   ├── loading.tsx               # Route-level checkout streaming skeleton
 │   │   └── page.tsx                  # Multi-step Checkout page (Server Component with route & empty-cart guards)
 │   ├── dashboard/
 │   │   ├── loading.tsx               # Route-level dashboard streaming skeleton
 │   │   └── page.tsx                  # Protected User Dashboard with SSR and 2 Suspense streams
 │   ├── orders/
+│   │   ├── loading.tsx               # Route-level orders streaming skeleton
 │   │   └── page.tsx                  # Protected Orders History page (Server Component)
 │   ├── products/
 │   │   └── [id]/
@@ -859,6 +921,9 @@ src/
 │   │       ├── loading.tsx           # Full-page detail skeleton
 │   │       ├── not-found.tsx         # Dedicated 404 page
 │   │       └── page.tsx              # Dynamic Product Details Page (Server Component)
+│   ├── error.tsx                     # Route group error boundary with reset()
+│   ├── global-error.tsx              # Root layout error boundary (Tailwind styled)
+│   ├── not-found.tsx                 # Root custom branded 404 page
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx
@@ -902,6 +967,12 @@ src/
 │   │   ├── HeaderUserMenu.tsx        # Client Component: user dropdown, initials avatar & logout
 │   │   ├── Hero.tsx
 │   │   └── Sidebar.tsx
+│   ├── orders/
+│   │   ├── OrderCard.tsx             # Client Component: order card with lazy accordion toggle
+│   │   ├── OrderDetailsAccordion.tsx # Order line items, tax breakdown & shipping details
+│   │   ├── OrderEmptyState.tsx       # Tab-aware order empty state with catalog CTA
+│   │   ├── OrderFilterTabs.tsx       # Status filter bar (All, Placed, Processing, etc.)
+│   │   └── ReorderButton.tsx         # Reorder action trigger
 │   └── products/
 │       ├── AddToCartSection.tsx      # Client Component for Product Details Page
 │       ├── CategoryGrid.tsx
@@ -953,6 +1024,8 @@ src/
     ├── cartUtils.ts                  # Cart totals, item counts & tax calculation helpers
     ├── cn.ts
     ├── dataTransformation.ts         # Bidirectional schema mappers and input validators
+    ├── imageUtils.ts                 # Base64 shimmer blur data URL for zero-shift Next.js images
+    ├── orderHelpers.ts               # Order status normalizer, badge styler & currency formatters
     └── shippingHelpers.ts            # Address payload builder & shipping rate calculator
 ```
 
@@ -1048,5 +1121,23 @@ src/
 - [x] **Empty cart guard**: Server-side redirect in `src/app/checkout/page.tsx` and guard in `placeOrderAction`.
 - [x] **Cart cleared after order**: Automatic cart clearing upon successful placement and redirection to `/orders`.
 - [x] **Geographic data caching**: Next.js 24-hour server data cache for countries with Server Actions for progressive state and city loading.
+
+### Assignment 12: Order Listing Page
+- [x] **Protected orders route**: Accessible at `/orders` with server session authentication guard and proxy protection.
+- [x] **Order history with status filter**: Interactive filter tabs (`All`, `Placed`, `Processing`, `Shipped`, `Delivered`, `Cancelled`) synced to URL search parameters.
+- [x] **Expandable order details**: Order card accordion with lazy-loaded itemized order details, shipping information, and pricing breakdown.
+- [x] **Empty order states**: Contextual empty states with direct call-to-action to browse the catalog.
+
+### Assignment 13: Error Handling & Skeletons
+- [x] **Root and route-level error boundaries**: `error.tsx` and `global-error.tsx` with `reset()` action and industrial fallback UI.
+- [x] **Custom branded 404 pages**: `not-found.tsx` at root and `/products/[id]/not-found.tsx` for missing products.
+- [x] **Responsive streaming skeletons**: `loading.tsx` implemented for `/orders`, `/cart`, `/checkout`, and `(store)/products`.
+- [x] **Valid HTML5 nesting**: Standardized `Button` component with native `href` prop, removing nested `<button>` inside `<a>`.
+
+### Assignment 14: Image, Font, and SEO Optimization
+- [x] **Local font loading via `next/font`**: `Industry Test` font self-hosted via `next/font/local` across Medium (500), Bold (700), and Black (800) weights with zero layout shift.
+- [x] **Responsive images with blur placeholders**: All product images served via `next/image` with explicit aspect ratios and base64 shimmer placeholders (`SHIMMER_BLUR_DATA_URL`).
+- [x] **Dynamic and static SEO metadata**: Dynamic `generateMetadata` for `/products/[id]` and `/products`; static `metadata` exports with title templates for all static pages.
+
 
 
