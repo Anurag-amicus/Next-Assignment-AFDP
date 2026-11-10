@@ -51,9 +51,7 @@ export default function HeaderClient({
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-                getCartCountAction().then((count) => { setCurrentCartCount(count);});
-                console.log(`cart count update: ${currentCartCount}` )
-   
+        getCartCountAction().then((count) => { setCurrentCartCount(count); });
     }, []);
 
     const isProductListingPage = pathname === "/products";
