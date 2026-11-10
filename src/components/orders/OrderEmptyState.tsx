@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Button from "@/components/common/Button";
 import type { OrderFilterTab } from "@/types/order";
 
@@ -39,27 +38,23 @@ export function EmptyOrdersState({ tab, onResetTab }: EmptyOrdersStateProps) {
                             VIEW ALL ORDERS
                         </Button>
                     ) : (
-                        <Link href="/orders">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                className="w-auto h-10 px-5 text-xs font-bold uppercase tracking-wider border border-border"
-                            >
-                                VIEW ALL ORDERS
-                            </Button>
-                        </Link>
+                        <Button
+                            href="/orders"
+                            variant="secondary"
+                            className="w-auto h-10 px-5 text-xs font-bold uppercase tracking-wider border border-border"
+                        >
+                            VIEW ALL ORDERS
+                        </Button>
                     )
                 )}
 
-                <Link href="/products">
-                    <Button
-                        type="button"
-                        variant="primary"
-                        className="w-auto h-10 px-6 text-xs font-bold uppercase tracking-wider"
-                    >
-                        START SHOPPING
-                    </Button>
-                </Link>
+                <Button
+                    href="/products"
+                    variant="primary"
+                    className="w-auto h-10 px-6 text-xs font-bold uppercase tracking-wider"
+                >
+                    START SHOPPING
+                </Button>
             </div>
         </div>
     );

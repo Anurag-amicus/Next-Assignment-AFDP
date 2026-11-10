@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Button from "@/components/common/Button";
 import type { CartItem } from "@/types/cart";
 import { calculateCartSubtotal } from "@/utils/cartUtils";
@@ -111,24 +110,22 @@ export default function OrderSummary({
                 </div>
 
                 <div className="flex flex-col gap-2.5 pt-2">
-                    <Link href="/checkout" className="w-full">
-                        <Button
-                            variant="primary"
-                            disabled={items.length === 0 || loading}
-                            className="w-full h-11 text-xs font-bold uppercase tracking-wider"
-                        >
-                            PROCEED TO CHECKOUT
-                        </Button>
-                    </Link>
+                    <Button
+                        href="/checkout"
+                        variant="primary"
+                        disabled={items.length === 0 || loading}
+                        className="w-full h-11 text-xs font-bold uppercase tracking-wider"
+                    >
+                        PROCEED TO CHECKOUT
+                    </Button>
 
-                    <Link href="/products" className="w-full">
-                        <Button
-                            variant="generic"
-                            className="w-full h-11 bg-charcoal text-white text-xs font-bold uppercase tracking-wider hover:bg-black transition-colors"
-                        >
-                            CONTINUE SHOPPING
-                        </Button>
-                    </Link>
+                    <Button
+                        href="/products"
+                        variant="generic"
+                        className="w-full h-11 bg-charcoal text-white text-xs font-bold uppercase tracking-wider hover:bg-black transition-colors"
+                    >
+                        CONTINUE SHOPPING
+                    </Button>
                 </div>
             </div>
         </aside>

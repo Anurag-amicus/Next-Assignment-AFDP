@@ -36,14 +36,13 @@ export default function ProductNotFound() {
                 <p className="text-sm text-muted mb-6 leading-relaxed">
                     The product you are looking for does not exist or may have been removed from our catalog.
                 </p>
-                <Link href="/products">
-                    <Button
-                        variant="primary"
-                        className="h-10 px-6 font-bold uppercase text-xs tracking-wider"
-                    >
-                        Browse All Products
-                    </Button>
-                </Link>
+                <Button
+                    href="/products"
+                    variant="primary"
+                    className="h-10 px-6 font-bold uppercase text-xs tracking-wider"
+                >
+                    Browse All Products
+                </Button>
             </div>
         </div>
     );

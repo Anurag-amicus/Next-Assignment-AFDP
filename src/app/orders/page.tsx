@@ -5,6 +5,7 @@ import { normalizeOrderStatus } from "@/utils/orderHelpers";
 import OrderFilterTabs from "@/components/orders/OrderFilterTabs";
 import OrderCard from "@/components/orders/OrderCard";
 import EmptyOrdersState from "@/components/orders/OrderEmptyState";
+import Breadcrumb from "@/components/common/Breadcrumb";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
 
     return (
         <div className="w-full pt-4.5 px-6 pb-15 max-[520px]:pt-7 max-[520px]:px-4 max-[520px]:pb-10">
+            <Breadcrumb className="mb-4" />
             <div className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
                 <h1 className="font-display text-2xl font-bold uppercase text-charcoal m-0 max-[520px]:text-xl">
                     My Orders

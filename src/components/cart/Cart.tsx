@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Button from "@/components/common/Button";
 import CartItem from "./CartItem";
 import CartSkeleton from "./CartSkeleton";
@@ -44,14 +43,13 @@ export default function Cart({
                     <p className="m-0 mb-6 text-sm text-muted max-w-sm">
                         Looks like you have not added anything to your cart yet. Explore our catalog and find something you like!
                     </p>
-                    <Link href="/products">
-                        <Button
-                            variant="primary"
-                            className="w-auto h-11 px-6 text-sm font-bold uppercase tracking-wider"
-                        >
-                            Browse Products
-                        </Button>
-                    </Link>
+                    <Button
+                        href="/products"
+                        variant="primary"
+                        className="w-auto h-11 px-6 text-sm font-bold uppercase tracking-wider"
+                    >
+                        Browse Products
+                    </Button>
                 </div>
             ) : (
                 <div className="flex flex-col gap-3">

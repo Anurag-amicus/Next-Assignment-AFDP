@@ -106,14 +106,13 @@ export default function AboutPage() {
                         </p>
                     </div>
 
-                    <Link href="#who-we-are">
-                        <Button
-                            variant="outline"
-                            className="w-auto px-7 h-11 text-xs font-bold uppercase tracking-wider rounded-xs"
-                        >
-                            Our Story
-                        </Button>
-                    </Link>
+                    <Button
+                        href="#who-we-are"
+                        variant="outline"
+                        className="w-auto px-7 h-11 text-xs font-bold uppercase tracking-wider rounded-xs"
+                    >
+                        Our Story
+                    </Button>
                 </div>
             </section>
 

@@ -65,7 +65,7 @@ export default async function ProductDetailPage({
 }: ProductDetailPageProps) {
     const { id } = await params;
 
-    if (!id || id.trim() === "") {
+    if (!id || id.trim() === "" || isNaN(Number(id))) {
         notFound();
     }
 
@@ -74,7 +74,7 @@ export default async function ProductDetailPage({
     });
 
     if (!res.success) {
-        if (res.status === 404) {
+        if (res.status === 404 || res.status === 400) {
             notFound();
         }
         throw new Error(res.error || `Failed to load product #${id} from server.`);

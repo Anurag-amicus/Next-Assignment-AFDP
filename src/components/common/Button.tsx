@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import type { ButtonProps } from "@/types/button";
 import { cn } from "@/utils/cn";
+import { variantButtonClasses } from "@/types/button";
 
 function Button({
     variant = "primary",
@@ -11,39 +13,31 @@ function Button({
     className = "",
     type = "button",
     form,
+    href,
 }: ButtonProps) {
-    const variantClasses = {
-        primary:
-            "bg-orange text-white border-2 border-orange hover:bg-orange-dark hover:border-orange-dark",
+    
+    const combinedClassName = cn(
+        "inline-flex items-center justify-center text-center no-underline w-61.25 h-16 rounded text-lg font-semibold tracking-wide cursor-pointer font-sans transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
+        variantButtonClasses[variant],
+        disabled && "opacity-50 pointer-events-none cursor-not-allowed",
+        className
+    );
 
-        secondary:
-            "bg-white text-black border-2 border-black hover:bg-black hover:border-black hover:text-white",
-
-        outline:
-            "bg-white text-orange border-2 border-orange hover:bg-orange hover:border-orange hover:text-white",
-
-        danger:
-            "bg-red-700 text-white border-2 border-red-700 hover:bg-red-800 hover:border-red-800",
-
-        generic:
-            "bg-transparent border-none text-inherit hover:bg-transparent hover:border-transparent",
-    };
-
-    const handleClick = () => {
-        onClick?.();
-    };
+    if (href && !disabled) {
+        return (
+            <Link href={href} className={combinedClassName} onClick={onClick}>
+                {children}
+            </Link>
+        );
+    }
 
     return (
         <button
             type={type}
             form={form || undefined}
-            className={cn(
-                "w-61.25 h-16 rounded text-lg font-semibold tracking-wide cursor-pointer font-sans transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
-                variantClasses[variant],
-                className
-            )}
+            className={combinedClassName}
             disabled={disabled}
-            onClick={handleClick}
+            onClick={onClick}
         >
             {children}
         </button>

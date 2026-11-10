@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import Button from "@/components/common/Button";
 import type { ErrorProps } from "@/types/error";
 
@@ -35,14 +34,13 @@ export default function ProductDetailError({
                     >
                         Try Again
                     </Button>
-                    <Link href="/products">
-                        <Button
-                            variant="generic"
-                            className="h-10 px-6 font-bold uppercase text-xs tracking-wider border border-border text-charcoal hover:border-orange hover:text-orange transition-colors"
-                        >
-                            Browse All Products
-                        </Button>
-                    </Link>
+                    <Button
+                        href="/products"
+                        variant="generic"
+                        className="h-10 px-6 font-bold uppercase text-xs tracking-wider border border-border text-charcoal hover:border-orange hover:text-orange transition-colors"
+                    >
+                        Browse All Products
+                    </Button>
                 </div>
             </div>
         </div>
