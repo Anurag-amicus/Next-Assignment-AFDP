@@ -874,12 +874,45 @@ To ensure that the dashboard never triggers horizontal scrolling on any device (
 
 ---
 
+## 🧪 Assignment 15: Testing (Jest + React Testing Library)
+
+### Objectives
+- Configure Jest with Next.js App Router compiler integration (`next/jest`) and JSDOM test environment.
+- Author 10+ passing tests across Components, Interactions, Server Actions, Route Handlers, and Zod Validations.
+- Decouple tests from external live backends by mocking services, sessions, and Next.js modules.
+- Enforce accessibility queries (`getByRole`, `getByText`, `getByLabelText`) without testing implementation details.
+- Generate and report test coverage via V8 engine (`npm run test:coverage`).
+
+### ⚙️ Key Implementation Highlights
+1. **Test Infrastructure**:
+   - `jest.config.mjs`: Configured `next/jest` compiler with JSDOM, path alias mapping (`@/*`), and V8 coverage provider.
+   - `jest.setup.ts`: Configured `@testing-library/jest-dom` and global mocks for `next/navigation`, `next/image`, and `next/cache`.
+2. **Suite Breakdown (17 Passing Tests)**:
+   - **Components & Interactions (`ProductCard.test.tsx`, `Cart.test.tsx`)**: Verified semantic rendering, live quantity and price recalculation, empty cart navigation, line-item math, and user event handling.
+   - **Validation Schemas (`validations.test.ts`)**: Verified valid shipping form parsing, constraint rejections (10-digit phone, email format, ZIP code), and cart quantity boundaries (1–99).
+   - **Server Actions (`cartActions.test.ts`)**: Tested fast validation failure, unauthenticated rejection (`requireAuth`), and authenticated mutation delegation with cache revalidation.
+   - **Route Handlers (`productsRoute.test.ts`)**: Tested `GET /api/products` query pagination and data transformation, along with 400 (malformed ID) and 404 (not found) error branches.
+
+---
+
 ## 📁 Clean Folder Structure
 
 ```
+jest.config.mjs                       # Next.js Jest configuration with JSDOM and path aliases
+jest.setup.ts                         # Custom DOM matchers and Next.js mocks
 scripts/
 └── test-endpoints.js                 # Automated test suite for Assignment 4 API wrapper
 src/
+├── __tests__/
+│   ├── actions/
+│   │   └── cartActions.test.ts       # Server Actions: auth guard, validation & delegation
+│   ├── api/
+│   │   └── productsRoute.test.ts     # Route Handlers: GET list pagination & GET [id]
+│   ├── components/
+│   │   ├── Cart.test.tsx             # Component & interaction tests: empty state & item math
+│   │   └── ProductCard.test.tsx      # Component & interaction tests: render, live total & add-to-cart
+│   └── validations/
+│       └── validations.test.ts       # Zod schemas: valid & invalid shipping/cart cases
 ├── app/
 │   ├── (auth)/
 │   │   ├── layout.tsx
@@ -1139,5 +1172,58 @@ src/
 - [x] **Responsive images with blur placeholders**: All product images served via `next/image` with explicit aspect ratios and base64 shimmer placeholders (`SHIMMER_BLUR_DATA_URL`).
 - [x] **Dynamic and static SEO metadata**: Dynamic `generateMetadata` for `/products/[id]` and `/products`; static `metadata` exports with title templates for all static pages.
 
+### Assignment 15: Testing (Jest + React Testing Library)
+- [x] **10+ passing tests**: 17 tests passing cleanly across 5 dedicated test suites.
+- [x] **Component and user interaction tests**: Ported and enhanced `ProductCard` and `Cart` tests using accessible queries (`getByRole`, `getByText`).
+- [x] **Server Action and Route Handler tests**: Verified `cartActions` and `/api/products` endpoints with mocked dependencies and zero backend downtime impact.
+- [x] **Validation tests**: Tested valid and invalid cases for shipping and cart schemas.
+- [x] **Coverage report**: Automated V8 coverage report generated via `npm run test:coverage`.
+
+---
+
+## 📊 Test Coverage Report
+
+```text
+------------------------|---------|----------|---------|---------|--------------------------------------------
+File                    | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                          
+------------------------|---------|----------|---------|---------|--------------------------------------------
+All files               |   63.17 |    60.67 |   45.23 |   63.17 |                                            
+ app/actions            |   33.77 |    63.63 |   16.66 |   33.77 |                                            
+  cartActions.ts        |   33.77 |    63.63 |   16.66 |   33.77 | 17-46,72-76,97-136,142-181,187-212,218-225 
+ app/api/products       |   55.92 |    43.33 |      50 |   55.92 |                                            
+  route.ts              |   55.92 |    43.33 |      50 |   55.92 | 31-35,69-73,88-97,106-152                  
+ app/api/products/[id]  |   31.32 |       40 |   33.33 |   31.32 |                                            
+  route.ts              |   31.32 |       40 |   33.33 |   31.32 | 40-54,62-119,126-166                       
+ components/cart        |   82.91 |    66.66 |   66.66 |   82.91 |                                            
+  Cart.tsx              |   98.86 |       75 |     100 |   98.86 | 36                                         
+  CartItem.tsx          |   97.46 |       60 |      75 |   97.46 | 30-31                                      
+  CartSkeleton.tsx      |    3.12 |      100 |       0 |    3.12 | 2-32                                       
+ components/common      |    85.5 |    86.66 |    62.5 |    85.5 |                                            
+  Button.tsx            |     100 |      100 |     100 |     100 |                                            
+  Card.tsx              |     100 |      100 |     100 |     100 |                                            
+  QuantitySelector.tsx  |   71.84 |       60 |      40 |   71.84 | 25-44,47-52,55-57                          
+  Rating.tsx            |     100 |      100 |     100 |     100 |                                            
+ components/products    |   97.56 |     62.5 |     100 |   97.56 |                                            
+  ProductCard.tsx       |   97.56 |     62.5 |     100 |   97.56 | 36,40-41                                   
+ lib                    |   52.11 |      100 |       0 |   52.11 |                                            
+  session.ts            |   52.11 |      100 |       0 |   52.11 | 23-39,45-53,59-61,67-71                    
+ lib/validations        |      71 |       60 |      25 |      71 |                                            
+  cartSchema.ts         |   73.23 |       60 |      50 |   73.23 | 37-38,55-71                                
+  shippingSchema.ts     |   69.38 |      100 |       0 |   69.38 | 64-77,83-98                                
+ types                  |     100 |      100 |     100 |     100 |                                            
+  button.ts             |     100 |      100 |     100 |     100 |                                            
+  card.ts               |     100 |      100 |     100 |     100 |                                            
+ utils                  |   38.21 |    83.33 |   57.14 |   38.21 |                                            
+  cartUtils.ts          |   72.22 |      100 |      50 |   72.22 | 14-18                                      
+  cn.ts                 |     100 |      100 |     100 |     100 |                                            
+  dataTransformation.ts |   29.81 |    66.66 |      50 |   29.81 | 44-100,106-161                             
+  imageUtils.ts         |     100 |      100 |     100 |     100 |                                            
+------------------------|---------|----------|---------|---------|--------------------------------------------
+
+Test Suites: 5 passed, 5 total
+Tests:       17 passed, 17 total
+Snapshots:   0 total
+Time:        7.257 s
+```
 
 
