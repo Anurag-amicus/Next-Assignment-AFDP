@@ -13,7 +13,7 @@ export const cartItemPayloadSchema = z.object({
         .number({ message: "Quantity must be a number" })
         .int("Quantity must be an integer")
         .min(1, "Quantity must be at least 1")
-        .max(99, "Quantity cannot exceed 99"),
+        .max(50, "Quantity cannot exceed 50"),
 });
 
 /**

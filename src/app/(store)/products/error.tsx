@@ -18,8 +18,7 @@ export default function ProductsError({ error, reset }: ErrorProps) {
                 Failed to Load Products
             </h2>
             <p className="text-sm text-muted max-w-md mb-6 leading-relaxed">
-                {error?.message ||
-                    "An unexpected error occurred while loading products. Please check your network connection and try again."}
+                {"An unexpected error occurred while loading products."}
             </p>
             <div className="flex items-center gap-3">
                 <Button

@@ -58,34 +58,3 @@
         text-decoration: none;
     }
 }
-
-@keyframes toast-slide-in {
-    0% {
-        opacity: 0;
-        transform: translateY(-16px) translateX(20px) scale(0.95);
-    }
-    70% {
-        transform: translateY(2px) translateX(-2px) scale(1.01);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) translateX(0) scale(1);
-    }
-}
-
-@keyframes toast-progress {
-    0% {
-        width: 100%;
-    }
-    100% {
-        width: 0%;
-    }
-}
-
-.animate-toast-in {
-    animation: toast-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-toast-progress {
-    animation: toast-progress 3s linear forwards;
-}
