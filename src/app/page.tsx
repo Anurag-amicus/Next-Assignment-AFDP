@@ -14,8 +14,6 @@ export const metadata: Metadata = {
     description: "Welcome to Online Express - Discover top deals, featured categories, and premium products.",
 };
 
-
-
 export default function HomePage() {
     return (
         <div className="w-full">

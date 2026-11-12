@@ -1,30 +1,28 @@
 import Link from "next/link";
 import { productApiService } from "@/services/productApiServices";
+import CategoryGridError from "./CategoryGridError";
 import type { CategoryItem } from "@/types/product";
 
 export default async function CategoryGrid() {
+    let fetchError: Error | null = null;
     let categories: CategoryItem[] = [];
 
     try {
         const res = await productApiService.getCategories({ next: { revalidate: 60 } });
-        if (res.success && res.data && res.data.length > 0) {
+
+        if (!res.success) {
+            fetchError = new Error(res.error || "Failed to load product categories.");
+        } else if (!res.data || res.data.length === 0) {
+            fetchError = new Error("No product categories found.");
+        } else {
             categories = res.data;
         }
     } catch (error) {
-        console.error("CategoryGrid: Failed to fetch categories:", error);
+        fetchError = error instanceof Error ? error : new Error("Failed to load product categories.");
     }
 
-    if (categories.length === 0) {
-        return (
-            <section className="w-full bg-white px-6 py-7.5 max-[520px]:px-4.5 max-[520px]:pt-10 max-[520px]:pb-13.75">
-                <div className="mx-auto w-full max-w-287.5 text-center">
-                    <h2 className="m-0 mb-3 text-black font-display text-3xl font-extrabold leading-tight tracking-tight max-[768px]:text-2xl max-[480px]:text-xl">
-                        Shop by Category
-                    </h2>
-                    <p className="text-muted text-sm m-0">Categories currently unavailable.</p>
-                </div>
-            </section>
-        );
+    if (fetchError) {
+        return <CategoryGridError error={fetchError} />;
     }
 
     return (

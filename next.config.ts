@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   turbopack: {
     rules: {
-      "src/**/*.css": {
+      "*.css": {
         loaders: ["@tailwindcss/turbopack"],
         as: "*.css",
       },

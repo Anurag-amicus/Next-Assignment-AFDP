@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
-@theme {
+@theme inline {
     --font-display: var(--font-industry), sans-serif;
+}
 
+@theme {
     --color-black: #111111;
     --color-dark: #1f1f1f;
     --color-charcoal: #2c2e35;
