@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback, useTransition } from "react";
 import toast from "react-hot-toast";
-import { addressApiService } from "@/services/addressApiService";
+import { saveAddressAction, getAddressesAction } from "@/app/actions/addressActions";
 import { getStatesAction, getCitiesAction } from "@/app/actions/geoActions";
 import { validateField, validateShippingForm } from "@/lib/validations/shippingSchema";
-import { buildAddressPayload, saveAddress, SHIPPING_METHODS } from "@/utils/shippingHelpers";
+import { buildAddressPayload, SHIPPING_METHODS } from "@/utils/shippingHelpers";
 import SavedAddressList from "./SavedAddressList";
 import ShippingFormFields from "./ShippingFormFields";
 import ShippingMethodSelector from "./ShippingMethodSelector";
@@ -35,7 +35,6 @@ export function ShippingForm({
     initialAddressId = null,
     savedAddresses: initialSavedAddresses = [],
     initialCountries = [],
-    accessToken,
     onValidityChange,
     onShippingCostChange,
     onSubmitSuccess,
@@ -292,24 +291,19 @@ export function ShippingForm({
         startTransition(async () => {
             try {
                 const payload = buildAddressPayload(formData);
-                if (!accessToken) {
-                    setIsEditing(false);
-                    toast.success("Shipping address configured!");
-                    setIsSavingAddress(false);
-                    return;
-                }
-
-                const res = await saveAddress(selectedAddressId, payload, accessToken);
-                if (res.success) {
+                const res = await saveAddressAction(selectedAddressId, payload);
+                if (res.success && res.addressId) {
                     setSelectedAddressId(res.addressId);
                     setIsEditing(false);
                     toast.success("Address saved successfully!");
 
-                    // Refresh saved address list
-                    const freshList = await addressApiService.getAddresses(accessToken);
-                    if (freshList.success && freshList.data) {
-                        setSavedAddresses(freshList.data);
+                    // Refresh saved address list securely via Server Action
+                    const freshList = await getAddressesAction();
+                    if (freshList.success && freshList.addresses) {
+                        setSavedAddresses(freshList.addresses);
                     }
+                } else if (res.requireAuth) {
+                    toast.error("Please log in to manage your addresses.");
                 } else {
                     toast.error(res.error || "Failed to save address.");
                 }

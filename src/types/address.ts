@@ -13,3 +13,11 @@ export interface AddressResponse {
     addressId: number;
     message?: string;
 }
+
+export interface AddressActionResult {
+    success: boolean;
+    addressId?: number;
+    error?: string;
+    requireAuth?: boolean;
+    addresses?: Address[];
+}

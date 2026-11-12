@@ -1,14 +1,21 @@
 import Link from "next/link";
+import { defaultUser } from "@/types/auth";
+import type { User } from "@/types/auth";
 
+export interface DashboardWelcomeBannerProps {
+    user?: User | null;
+}
 
-export default function DashboardWelcomeBanner() {
+export default function DashboardWelcomeBanner({ user = defaultUser }: DashboardWelcomeBannerProps = {}) {
+    const activeUser = user || defaultUser;
+    const initial = activeUser.name ? activeUser.name.charAt(0).toUpperCase() : "J";
 
     return (
         <div className="w-full bg-white border border-border rounded-xs p-4 sm:p-6 mb-8 shadow-xs">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
                 <div className="flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
                     <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-full bg-orange/15 border border-orange/40 text-orange font-bold font-display text-xl sm:text-2xl shadow-xs">
-                        C
+                        {initial}
                     </div>
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -16,12 +23,12 @@ export default function DashboardWelcomeBanner() {
                                 Active Session
                             </span>
                             <span className="inline-block text-[11px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-xs bg-orange/10 text-orange border border-orange/20">
-                                Customer
+                                {activeUser.role}
                             </span>
 
                         </div>
                         <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold text-charcoal mt-1 mb-0.5 break-words">
-                            Welcome back, Customer !
+                            Welcome back, {activeUser.name}!
                         </h1>
                         <p className="text-xs sm:text-sm text-muted m-0 break-words">
                             Here is an overview of your account, default shipping address, and recent activity.

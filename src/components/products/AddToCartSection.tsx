@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import QuantitySelector from "@/components/common/QuantitySelector";
 import Button from "@/components/common/Button";
 import { addToCartAction } from "@/app/actions/cartActions";
+import { useCart } from "@/hooks/useCart";
 import type { Product } from "@/types/product";
 
 export interface AddToCartSectionProps {
@@ -14,6 +16,8 @@ export interface AddToCartSectionProps {
 export default function AddToCartSection({
     product,
 }: AddToCartSectionProps) {
+    const router = useRouter();
+    const { setCartCount } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [addedSuccess, setAddedSuccess] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
@@ -26,8 +30,15 @@ export default function AddToCartSection({
             const res = await addToCartAction({ productId: product.id, quantity });
             if (res.requireAuth) {
                 toast("Please log in to add products to your cart.", { icon: "⚠️" });
+                const returnUrl = typeof window !== "undefined"
+                    ? `${window.location.pathname}${window.location.search}`
+                    : `/products/${product.id}`;
+                router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
             } else if (res.success) {
                 toast.success(res.message || `Added ${quantity} item(s) to your cart!`);
+                if (typeof res.count === "number") {
+                    setCartCount(res.count);
+                }
                 setAddedSuccess(true);
                 setTimeout(() => setAddedSuccess(false), 2500);
             } else {

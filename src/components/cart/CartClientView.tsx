@@ -8,6 +8,7 @@ import {
     removeItemAction,
     clearCartAction,
 } from "@/app/actions/cartActions";
+import { useCart } from "@/hooks/useCart";
 import toast from "react-hot-toast";
 import type { CartItem } from "@/types/cart";
 
@@ -16,6 +17,7 @@ export interface CartClientViewProps {
 }
 
 export default function CartClientView({ initialItems }: CartClientViewProps) {
+    const { setCartCount } = useCart();
     const [items, setItems] = useState<CartItem[]>(initialItems);
     const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -48,6 +50,9 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
 
             if (res.success && res.items) {
                 setItems(res.items);
+                if (typeof res.count === "number") {
+                    setCartCount(res.count);
+                }
                 toast.success("Item removed from cart.");
             } else {
                 setError(res.error || "Failed to remove item.");
@@ -66,6 +71,7 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
 
             if (res.success) {
                 setItems([]);
+                setCartCount(0);
                 toast.success("Cart cleared.");
             } else {
                 setError(res.error || "Failed to clear cart.");

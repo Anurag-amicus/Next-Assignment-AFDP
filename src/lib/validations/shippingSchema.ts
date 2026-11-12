@@ -97,3 +97,57 @@ export function validateShippingForm(
     return errors;
 }
 
+/**
+ * Zod validation schema for backend address payload.
+ */
+export const addressPayloadSchema = z.object({
+    addressId: z.number().optional(),
+    addressLine1: z
+        .string()
+        .trim()
+        .min(1, "Street address is required.")
+        .min(5, "Street address must be at least 5 characters."),
+    addressLine2: z.string().optional().default(""),
+    city: z
+        .string()
+        .trim()
+        .min(1, "City is required."),
+    state: z
+        .string()
+        .trim()
+        .min(1, "State is required."),
+    postalCode: z
+        .string()
+        .trim()
+        .min(1, "Postal code is required.")
+        .regex(/^[a-zA-Z0-9\s-]{3,10}$/, "Enter a valid postal code."),
+    country: z
+        .string()
+        .trim()
+        .min(1, "Country is required."),
+    isDefault: z.boolean().optional().default(false),
+});
+
+export type AddressPayload = z.infer<typeof addressPayloadSchema>;
+
+/**
+ * Validates raw payload against addressPayloadSchema.
+ */
+export function validateAddressPayload(rawPayload: unknown): {
+    success: boolean;
+    data?: AddressPayload;
+    error?: string;
+} {
+    const result = addressPayloadSchema.safeParse(rawPayload);
+    if (!result.success) {
+        return {
+            success: false,
+            error: result.error.issues[0]?.message || "Invalid address data.",
+        };
+    }
+    return {
+        success: true,
+        data: result.data,
+    };
+}
+

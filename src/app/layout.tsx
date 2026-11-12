@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import localFont from "next/font/local";
+import "@fortawesome/fontawesome-svg-core/styles.css";
+import { config } from "@fortawesome/fontawesome-svg-core";
 import "./globals.css";
 import Header from "@/components/layout/Header";
+import HeaderSkeleton from "@/components/layout/HeaderSkeleton";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from "react-hot-toast";
+import { CartProvider } from "@/context/CartCountProvider";
+
+config.autoAddCss = false;
 
 const industry = localFont({
     src: [
@@ -44,12 +50,14 @@ export default function RootLayout({
     return (
         <html lang="en" className="h-full antialiased">
             <body className={`${industry.variable} min-h-full flex flex-col bg-white text-black font-sans`}>
-                <Suspense fallback={<header className="w-full border-b border-border bg-white min-h-18" />}>
-                    <Header />
-                </Suspense>
-                <main className="flex-1 w-full flex flex-col">{children}</main>
-                <Footer />
-                <Toaster position="top-right" />
+                <CartProvider>
+                    <Suspense fallback={<HeaderSkeleton />}>
+                        <Header />
+                    </Suspense>
+                    <main className="flex-1 w-full flex flex-col">{children}</main>
+                    <Footer />
+                    <Toaster position="top-right" />
+                </CartProvider>
             </body>
         </html>
     );

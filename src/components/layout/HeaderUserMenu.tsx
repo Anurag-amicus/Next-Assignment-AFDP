@@ -40,7 +40,7 @@ export default function HeaderUserMenu({ user, onLogout }: HeaderUserMenuProps) 
                 <span>Sign In</span>
                 <FontAwesomeIcon
                     icon={faRightToBracket}
-                    className="text-sm text-muted transition-colors duration-200 group-hover:text-orange"
+                    className="text-sm text-muted transition-colors duration-200 group-hover:text-orange w-3.5 h-3.5 shrink-0"
                 />
             </Link>
         );
@@ -109,7 +109,7 @@ export default function HeaderUserMenu({ user, onLogout }: HeaderUserMenuProps) 
                             }}
                             className="flex w-full items-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 border-0 bg-transparent cursor-pointer transition-colors text-left"
                         >
-                            <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
+                            <FontAwesomeIcon icon={faRightFromBracket} className="text-xs w-3 h-3 shrink-0" />
                             <span>Sign Out</span>
                         </button>
                     </div>

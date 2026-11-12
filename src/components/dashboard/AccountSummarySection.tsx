@@ -1,6 +1,7 @@
 import type { Address } from "@/types/address";
 import { addressApiService } from "@/services/addressApiService";
 import { getSession } from "@/lib/session";
+import { defaultUser } from "@/types/auth";
 
 
 
@@ -52,8 +53,8 @@ export default async function AccountSummarySection() {
                                 <span className="text-[11px] text-muted block uppercase tracking-wider font-semibold">
                                     Full Name
                                 </span>
-                                <span className="font-bold text-charcoal truncate block" title="name">
-                                    NAME
+                                <span className="font-bold text-charcoal truncate block" title={defaultUser.name}>
+                                    {defaultUser.name}
                                 </span>
                             </div>
 
@@ -61,8 +62,8 @@ export default async function AccountSummarySection() {
                                 <span className="text-[11px] text-muted block uppercase tracking-wider font-semibold">
                                     Email Address
                                 </span>
-                                <span className="font-bold text-charcoal truncate block" title="email">
-                                    EMAIL@DUMMY.com
+                                <span className="font-bold text-charcoal truncate block" title={defaultUser.email}>
+                                    {defaultUser.email}
                                 </span>
                             </div>
 
@@ -71,7 +72,7 @@ export default async function AccountSummarySection() {
                                     Account Role
                                 </span>
                                 <span className="font-bold text-charcoal truncate block">
-                                    Customer
+                                    {defaultUser.role}
                                 </span>
                             </div>
 
@@ -79,8 +80,8 @@ export default async function AccountSummarySection() {
                                 <span className="text-[11px] text-muted block uppercase tracking-wider font-semibold">
                                     Customer ID
                                 </span>
-                                <span className="font-bold text-charcoal truncate block" title="Customer ID">
-                                    N/A
+                                <span className="font-bold text-charcoal truncate block" title={`Customer #${defaultUser.customerId}`}>
+                                    #{defaultUser.customerId}
                                 </span>
                             </div>
                         </div>

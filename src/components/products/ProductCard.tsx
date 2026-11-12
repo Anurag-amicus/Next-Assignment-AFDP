@@ -3,6 +3,7 @@
 import { memo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import type { Product } from "@/types/product";
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
@@ -10,6 +11,7 @@ import QuantitySelector from "@/components/common/QuantitySelector";
 
 import toast from "react-hot-toast";
 import { addToCartAction } from "@/app/actions/cartActions";
+import { useCart } from "@/hooks/useCart";
 import Rating from "../common/Rating";
 import defaultImage from "@/assets/product-placeholder.svg";
 import { SHIMMER_BLUR_DATA_URL } from "@/utils/imageUtils";
@@ -22,6 +24,8 @@ const ProductCard = memo(function ProductCard({
     imageUrl,
     rating,
 }: Product) {
+    const router = useRouter();
+    const { setCartCount } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [isAdding, setIsAdding] = useState(false);
 
@@ -34,8 +38,15 @@ const ProductCard = memo(function ProductCard({
             const res = await addToCartAction({ productId: id, quantity });
             if (res.requireAuth) {
                 toast("Please log in to add products to your cart.", { icon: "⚠️" });
+                const returnUrl = typeof window !== "undefined"
+                    ? `${window.location.pathname}${window.location.search}`
+                    : `/products/${id}`;
+                router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
             } else if (res.success) {
                 toast.success(res.message || `Added ${quantity} item(s) to cart!`);
+                if (typeof res.count === "number") {
+                    setCartCount(res.count);
+                }
             } else {
                 toast.error(res.error || "Failed to add to cart.");
             }

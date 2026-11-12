@@ -18,7 +18,7 @@ export default function Rating({ rating }: RatingProps) {
                 <FontAwesomeIcon
                     key={i}
                     icon={faStar}
-                    className={i < fullStars ? "text-orange" : "text-gray-200"}
+                    className={`w-[1em] h-[1em] shrink-0 ${i < fullStars ? "text-orange" : "text-gray-200"}`}
                 />
             ))}
         </span>

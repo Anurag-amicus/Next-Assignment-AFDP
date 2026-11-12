@@ -88,39 +88,55 @@ export async function placeOrderAction(input: PlaceOrderInput): Promise<PlaceOrd
                 session.accessToken
             );
 
-            if (createAddrRes.success && createAddrRes.data?.addressId) {
-                addressId = createAddrRes.data.addressId;
+            if (!createAddrRes.success || !createAddrRes.data?.addressId) {
+                return {
+                    success: false,
+                    error: createAddrRes.success === false
+                        ? createAddrRes.error
+                        : "Failed to create shipping address.",
+                };
             }
+            addressId = createAddrRes.data.addressId;
         }
-
-        let orderId = Math.floor(100000 + Math.random() * 900000);
 
         // 5. Checkout & Payment API execution
-        if (addressId) {
-            const checkoutRes = await checkoutApiService.checkout(
-                {
-                    addressId,
-                    shippingMethod: validShipping.shippingMethod,
-                    paymentMethod,
-                },
-                {token:session.accessToken}
-            );
+        const checkoutRes = await checkoutApiService.checkout(
+            {
+                addressId,
+                shippingMethod: validShipping.shippingMethod,
+                paymentMethod,
+            },
+            { token: session.accessToken }
+        );
 
-            if (checkoutRes.success && checkoutRes.data?.orderId) {
-                orderId = checkoutRes.data.orderId;
-
-                // Authorize Payment via Mock Payment API
-                await checkoutApiService.mockPayment(
-                    {
-                        orderId,
-                        paymentMethod,
-                    },
-                    {token:session.accessToken}
-                );
-            }
+        if (!checkoutRes.success || !checkoutRes.data?.orderId) {
+            return {
+                success: false,
+                error: checkoutRes.success === false
+                    ? checkoutRes.error
+                    : "Order placement failed. Please verify your details and try again.",
+            };
         }
 
-        // 6. Clear Cart
+        const orderId = checkoutRes.data.orderId;
+
+        // Authorize Payment via Mock Payment API
+        const paymentRes = await checkoutApiService.mockPayment(
+            {
+                orderId,
+                paymentMethod,
+            },
+            { token: session.accessToken }
+        );
+
+        if (!paymentRes.success) {
+            return {
+                success: false,
+                error: paymentRes.error || "Payment authorization failed. Please try again.",
+            };
+        }
+
+        // 6. Clear Cart only after verified successful checkout and payment
         await cartApiService.clearCart(session.accessToken);
 
         // 7. Revalidate Next.js cache paths

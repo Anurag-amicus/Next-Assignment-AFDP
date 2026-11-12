@@ -9,6 +9,7 @@ import PaymentStep from "./PaymentStep";
 import ReviewStep from "./ReviewStep";
 import CheckoutSummary from "./CheckoutSummary";
 import { placeOrderAction } from "@/app/actions/orderActions";
+import { useCart } from "@/hooks/useCart";
 import { initialShippingForm } from "@/types/shipping";
 import type { CartItem } from "@/types/cart";
 import type { Address } from "@/types/address";
@@ -20,7 +21,6 @@ export interface CheckoutClientViewProps {
     initialItems: CartItem[];
     savedAddresses?: Address[];
     initialCountries?: Country[];
-    accessToken?: string;
     defaultFullName?: string;
     defaultEmail?: string;
 }
@@ -29,11 +29,11 @@ export default function CheckoutClientView({
     initialItems,
     savedAddresses = [],
     initialCountries = [],
-    accessToken,
     defaultFullName = "",
     defaultEmail = "",
 }: CheckoutClientViewProps) {
     const router = useRouter();
+    const { setCartCount } = useCart();
     const [items] = useState<CartItem[]>(initialItems);
 
     // Multi-step checkout states
@@ -111,6 +111,7 @@ export default function CheckoutClientView({
                 }
 
                 if (res.success) {
+                    setCartCount(0);
                     toast.success(res.message || "Order placed successfully! Thank you for your purchase.");
                     router.push("/orders");
                 } else {
@@ -211,7 +212,6 @@ export default function CheckoutClientView({
                             initialAddressId={selectedAddressId}
                             savedAddresses={savedAddresses}
                             initialCountries={initialCountries}
-                            accessToken={accessToken}
                             onValidityChange={setIsShippingValid}
                             onShippingCostChange={setShippingCost}
                             onSubmitSuccess={handleShippingSuccess}

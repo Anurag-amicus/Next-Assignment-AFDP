@@ -4,6 +4,7 @@ import { cartApiService } from "@/services/cartApiService";
 import { addressApiService } from "@/services/addressApiService";
 import { geoApiService } from "@/services/geoApiService";
 import CheckoutClientView from "@/components/checkout/CheckoutClientView";
+import { defaultUser } from "@/types/auth";
 import type { Metadata } from "next";
 import type { Country } from "@/types/geoData";
 
@@ -47,7 +48,8 @@ export default async function CheckoutPage() {
                 initialItems={items}
                 savedAddresses={savedAddresses}
                 initialCountries={initialCountries}
-                accessToken={session.accessToken}
+                defaultFullName={defaultUser.name}
+                defaultEmail={defaultUser.email}
             />
         </div>
     );

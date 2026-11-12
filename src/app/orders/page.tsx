@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { orderApiService } from "@/services/orderApiService";
@@ -31,12 +32,10 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         { status: activeStatus }
     );
 
-    if (!res.success) {
-        throw new Error(res.error ?? "Failed to load orders."); // handled by app/error.tsx
-    }
-
-    const orders = res.data?.orders ?? [];
-    const totalRecords = res.data?.totalRecords ?? orders.length;
+    const isError = !res.success;
+    const errorMessage = !res.success ? (res.error ?? "Failed to load orders.") : null;
+    const orders = res.success ? (res.data?.orders ?? []) : [];
+    const totalRecords = res.success ? (res.data?.totalRecords ?? orders.length) : 0;
 
     return (
         <div className="w-full pt-4.5 px-6 pb-15 max-[520px]:pt-7 max-[520px]:px-4 max-[520px]:pb-10">
@@ -45,14 +44,42 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                 <h1 className="font-display text-2xl font-bold uppercase text-charcoal m-0 max-[520px]:text-xl">
                     My Orders
                 </h1>
-                <span className="text-xs text-muted font-medium">
-                    {totalRecords} {totalRecords === 1 ? "order" : "orders"} found
-                </span>
+                {!isError && (
+                    <span className="text-xs text-muted font-medium">
+                        {totalRecords} {totalRecords === 1 ? "order" : "orders"} found
+                    </span>
+                )}
             </div>
 
             <OrderFilterTabs activeTab={activeStatus} />
 
-            {orders.length > 0 ? (
+            {isError ? (
+                <div className="w-full flex flex-col items-center justify-center py-12 px-4 bg-white border border-border rounded-xs text-center shadow-xs">
+                    <div className="w-14 h-14 rounded-full bg-orange-50 border border-orange-200 flex items-center justify-center text-2xl mb-3 text-orange">
+                        ⚠️
+                    </div>
+                    <h3 className="m-0 mb-2 font-display text-base sm:text-lg font-bold text-charcoal">
+                        Unable to load your orders
+                    </h3>
+                    <p className="m-0 mb-5 text-xs sm:text-sm text-muted max-w-md leading-relaxed">
+                        {errorMessage || "We encountered a temporary connection issue while retrieving your order history. Please try refreshing or check back in a few moments."}
+                    </p>
+                    <div className="flex gap-3">
+                        <Link
+                            href="/orders"
+                            className="inline-flex items-center justify-center h-9 px-4 rounded-xs bg-orange hover:bg-orange-dark text-white text-xs font-bold uppercase tracking-wider transition-colors no-underline"
+                        >
+                            Try Again
+                        </Link>
+                        <Link
+                            href="/products"
+                            className="inline-flex items-center justify-center h-9 px-4 rounded-xs border border-border hover:bg-surface text-charcoal text-xs font-bold uppercase tracking-wider transition-colors no-underline"
+                        >
+                            Browse Products
+                        </Link>
+                    </div>
+                </div>
+            ) : orders.length > 0 ? (
                 <div className="flex flex-col gap-4">
                     {orders.map((order) => (
                         <OrderCard key={order.orderId} order={order} />

@@ -57,4 +57,11 @@
         color: inherit;
         text-decoration: none;
     }
+
+    svg.svg-inline--fa {
+        height: 1em;
+        width: 1em;
+        display: inline-block;
+        vertical-align: -0.125em;
+    }
 }

@@ -85,7 +85,7 @@ function Hero() {
                     >
                         <FontAwesomeIcon
                             icon={faMagnifyingGlass}
-                            className="text-base text-orange max-[768px]:text-sm"
+                            className="text-base text-orange max-[768px]:text-sm w-4 h-4 shrink-0"
                         />
                     </button>
                 </form>

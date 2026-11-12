@@ -12,8 +12,25 @@ export function normalizeOrderStatus(status?: string): OrderFilterTab {
     return "All Orders";
 }
 
-export const formatOrderDate = (iso: string) =>
-    new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
+export function formatOrderDate(iso?: string | null): string {
+    if (!iso || typeof iso !== "string" || !iso.trim()) {
+        return "Recent";
+    }
+
+    try {
+        const date = new Date(iso);
+        if (isNaN(date.getTime())) {
+            return "Recent";
+        }
+        return new Intl.DateTimeFormat("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        }).format(date);
+    } catch {
+        return "Recent";
+    }
+}
 
 export const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "INR" }).format(amount);

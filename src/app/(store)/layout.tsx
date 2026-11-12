@@ -5,6 +5,8 @@ import Sidebar from "@/components/layout/Sidebar";
 import { productApiService } from "@/services/productApiServices";
 import type { CategoryItem, BrandItem } from "@/types/product";
 
+export const revalidate = 60;
+
 export default async function StoreLayout({
     children,
 }: {
@@ -15,8 +17,8 @@ export default async function StoreLayout({
 
     try {
         const [catRes, brandRes] = await Promise.all([
-            productApiService.getCategories({ cache: "no-store" }),
-            productApiService.getBrands({ cache: "no-store" }),
+            productApiService.getCategories({ next: { revalidate: 60 } }),
+            productApiService.getBrands({ next: { revalidate: 60 } }),
         ]);
         if (catRes.success && catRes.data) categories = catRes.data;
         if (brandRes.success && brandRes.data) brands = brandRes.data;

@@ -7,6 +7,7 @@ import { formatCurrency, formatOrderDate, normalizeOrderStatus } from "@/utils/o
 import Button from "@/components/common/Button";
 import ReorderButton from "@/components/orders/ReorderButton";
 import OrderDetailsAccordion from "@/components/orders/OrderDetailsAccordion";
+import OrderDetailsSkeleton from "@/components/orders/OrderDetailsSkeleton";
 import { getOrderDetailsAction } from "@/app/actions/orderActions";
 import { SHIMMER_BLUR_DATA_URL } from "@/utils/imageUtils";
 import type { OrderDetail } from "@/types/order";
@@ -123,10 +124,7 @@ export default function OrderCard({ order }: { order: OrderDetail }) {
             {isOpen && (
                 <div className="mt-4 pt-2">
                     {isLoading ? (
-                        <div className="py-6 text-center text-xs text-muted flex items-center justify-center gap-2">
-                            <span className="inline-block w-4 h-4 border-2 border-orange border-t-transparent rounded-full animate-spin" />
-                            <span>Loading order details...</span>
-                        </div>
+                        <OrderDetailsSkeleton />
                     ) : error ? (
                         <div className="py-4 text-center border-t border-border mt-3">
                             <p className="text-xs text-red-600 mb-2">{error}</p>

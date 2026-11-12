@@ -1,4 +1,3 @@
-import { addressApiService } from "@/services/addressApiService";
 import type { Address } from "@/types/address";
 import type {
     ShippingFormData,
@@ -43,43 +42,3 @@ export const SHIPPING_METHODS: {
         price: 400,
     },
 ];
-
-export async function saveAddress(
-    addressId: number | null,
-    payload: Address,
-    token: string
-) {
-    if (addressId) {
-        const result = await addressApiService.updateAddress(
-            addressId,
-            payload,
-            token
-        );
-
-        if (result.success === false) {
-            return {
-                success: false as const,
-                error: result.error || "Failed to update address.",
-            };
-        }
-
-        return {
-            success: true as const,
-            addressId,
-        };
-    }
-
-    const result = await addressApiService.createAddress(payload, token);
-
-    if (result.success === false) {
-        return {
-            success: false as const,
-            error: result.error || "Failed to create address.",
-        };
-    }
-
-    return {
-        success: true as const,
-        addressId: result.data.addressId,
-    };
-}

@@ -12,6 +12,7 @@ import {
     faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useCart } from "@/hooks/useCart";
 import { logoutAction } from "@/app/actions/authActions";
 import { getCartCountAction } from "@/app/actions/cartActions";
 import HeaderUserMenu from "./HeaderUserMenu";
@@ -41,18 +42,21 @@ export default function HeaderClient({
         setUser(initialUser);
     }
 
-    const [currentCartCount, setCurrentCartCount] = useState<number>(initialCartCount);
-    const [prevCartCount, setPrevCartCount] = useState<number>(initialCartCount);
-    if (initialCartCount !== prevCartCount) {
-        setPrevCartCount(initialCartCount);
-        setCurrentCartCount(initialCartCount);
-    }
-
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { cartCount, setCartCount } = useCart();
 
     useEffect(() => {
-        getCartCountAction().then((count) => { setCurrentCartCount(count); });
-    }, []);
+        if (typeof initialCartCount === "number" && initialCartCount > 0) {
+            setCartCount(initialCartCount);
+        }
+    }, [initialCartCount, setCartCount]);
+
+    useEffect(() => {
+        getCartCountAction().then((count) => {
+            setCartCount(count);
+        });
+    }, [setCartCount]);
+
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const isProductListingPage = pathname === "/products";
     const queryParam = searchParams.get("search") || "";
@@ -107,6 +111,7 @@ export default function HeaderClient({
 
     const handleLogout = async () => {
         setUser(null);
+        setCartCount(0);
         await logoutAction();
     };
 
@@ -178,7 +183,7 @@ export default function HeaderClient({
                         >
                             <FontAwesomeIcon
                                 icon={faMagnifyingGlass}
-                                className="text-base text-orange max-[768px]:text-sm"
+                                className="text-base text-orange max-[768px]:text-sm w-4 h-4 shrink-0"
                             />
                         </button>
                     </form>
@@ -215,18 +220,18 @@ export default function HeaderClient({
                                     ? "text-orange font-bold relative after:absolute after:-bottom-1.5 after:left-0 after:right-0 after:h-0.5 after:bg-orange after:rounded-full"
                                     : "text-muted hover:text-orange"
                             }`}
-                            aria-label={`Shopping cart with ${currentCartCount} items`}
+                            aria-label={`Shopping cart with ${cartCount} items`}
                         >
                             <div className="relative flex items-center justify-center">
                                 <FontAwesomeIcon
                                     icon={faCartShopping}
-                                    className="text-base leading-none transition-transform duration-200 group-hover:scale-110"
+                                    className="text-base leading-none transition-transform duration-200 group-hover:scale-110 w-4 h-4 shrink-0"
                                 />
                                 <span
                                     id="cart-item-badge"
                                     className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange px-1 font-display text-[10px] font-bold text-white shadow-xs leading-none max-[600px]:h-3.5 max-[600px]:min-w-3.5 max-[600px]:text-[9px]"
                                 >
-                                    {currentCartCount}
+                                    {cartCount}
                                 </span>
                             </div>
                             <span className="max-[768px]:hidden">Cart</span>
@@ -259,7 +264,7 @@ export default function HeaderClient({
                     >
                         <FontAwesomeIcon
                             icon={faMagnifyingGlass}
-                            className="text-sm text-orange"
+                            className="text-sm text-orange w-3.5 h-3.5 shrink-0"
                         />
                     </button>
                 </form>
@@ -319,8 +324,8 @@ export default function HeaderClient({
                             isActive("/cart") ? "text-orange font-bold pl-2 border-l-2 border-orange" : "text-muted hover:text-orange"
                         }`}
                     >
-                        <FontAwesomeIcon icon={faCartShopping} className="text-sm" />
-                        <span>Cart ({currentCartCount})</span>
+                        <FontAwesomeIcon icon={faCartShopping} className="text-sm w-3.5 h-3.5 shrink-0" />
+                        <span>Cart ({cartCount})</span>
                     </Link>
 
                     {user ? (
@@ -346,7 +351,7 @@ export default function HeaderClient({
                                 }}
                                 className="text-xs font-semibold text-red-600 py-1.5 no-underline text-left border-0 bg-transparent cursor-pointer flex items-center gap-2 hover:text-red-700 transition-colors"
                             >
-                                <FontAwesomeIcon icon={faRightFromBracket} className="text-xs" />
+                                <FontAwesomeIcon icon={faRightFromBracket} className="text-xs w-3 h-3 shrink-0" />
                                 <span>Sign Out</span>
                             </button>
                         </div>
@@ -357,7 +362,7 @@ export default function HeaderClient({
                             className="text-sm font-semibold py-1.5 no-underline text-muted hover:text-orange border-t border-border pt-2 mt-1 flex items-center justify-between"
                         >
                             <span>Sign In</span>
-                            <FontAwesomeIcon icon={faRightToBracket} className="text-sm" />
+                            <FontAwesomeIcon icon={faRightToBracket} className="text-sm w-3.5 h-3.5 shrink-0" />
                         </Link>
                     )}
                 </div>

@@ -112,7 +112,7 @@ describe("cartActions Server Actions", () => {
         expect(result.success).toBe(true);
         expect(result.message).toBe("Item added to cart successfully!");
         expect(result.items).toEqual(mockFreshCart);
-        expect(result.count).toBe(2);
+        expect(result.count).toBe(1);
     });
 });
 

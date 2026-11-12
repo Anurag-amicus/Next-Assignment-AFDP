@@ -1,4 +1,8 @@
-import { shippingSchema } from "@/lib/validations/shippingSchema";
+import {
+    shippingSchema,
+    addressPayloadSchema,
+    validateAddressPayload,
+} from "@/lib/validations/shippingSchema";
 import { cartItemPayloadSchema, validateCartItemPayload } from "@/lib/validations/cartSchema";
 
 describe("Validation Schemas", () => {
@@ -111,6 +115,45 @@ describe("Validation Schemas", () => {
             if (!negativeIdResult.success) {
                 expect(negativeIdResult.error.issues[0]?.message).toBe("Product ID must be a positive number");
             }
+        });
+    });
+
+    describe("addressPayloadSchema & validateAddressPayload", () => {
+        const validAddress = {
+            addressLine1: "123 Tech Park Boulevard",
+            addressLine2: "Suite 4B",
+            city: "Bengaluru",
+            state: "Karnataka",
+            postalCode: "560001",
+            country: "India",
+            isDefault: true,
+        };
+
+        test("validates and accepts correctly formatted address payloads", () => {
+            expect(addressPayloadSchema.safeParse(validAddress).success).toBe(true);
+            const result = validateAddressPayload(validAddress);
+            expect(result.success).toBe(true);
+            if (result.success && result.data) {
+                expect(result.data.addressLine1).toBe("123 Tech Park Boulevard");
+                expect(result.data.city).toBe("Bengaluru");
+                expect(result.data.postalCode).toBe("560001");
+            }
+        });
+
+        test("rejects invalid address with short address or missing country", () => {
+            const shortAddressResult = validateAddressPayload({
+                ...validAddress,
+                addressLine1: "abc",
+            });
+            expect(shortAddressResult.success).toBe(false);
+            expect(shortAddressResult.error).toBe("Street address must be at least 5 characters.");
+
+            const missingCountryResult = validateAddressPayload({
+                ...validAddress,
+                country: "",
+            });
+            expect(missingCountryResult.success).toBe(false);
+            expect(missingCountryResult.error).toBe("Country is required.");
         });
     });
 });

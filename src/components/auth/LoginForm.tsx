@@ -88,7 +88,7 @@ export default function LoginForm() {
                             onClick={() => setShowPassword((prev) => !prev)}
                             className="absolute right-3 text-muted hover:text-charcoal border-0 bg-transparent cursor-pointer p-1 flex items-center justify-center transition-colors"
                         >
-                            <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="text-sm" />
+                            <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="text-sm w-4 h-4 shrink-0" />
                         </button>
                     </div>
                     {state.fieldErrors?.password && (
