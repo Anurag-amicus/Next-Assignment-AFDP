@@ -58,7 +58,7 @@ export default function HeaderUserMenu({ user, onLogout }: HeaderUserMenuProps) 
                 className="group flex items-center gap-2 cursor-pointer border-0 bg-transparent p-0 transition-colors"
             >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange/15 border border-orange/40 text-orange font-bold font-display text-sm shadow-xs transition-transform duration-200 group-hover:scale-105">
-                    {user.name ? user.name.charAt(0).toUpperCase() : "👤"}
+                    {user.name ? user.name.charAt(0).toUpperCase() : "J"}
                 </div>
                 <span className="text-xs font-semibold text-charcoal group-hover:text-orange max-[900px]:hidden">
                     {user.name ? user.name.split(" ")[0] : "Account"}

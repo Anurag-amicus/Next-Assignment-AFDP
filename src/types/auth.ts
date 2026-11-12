@@ -44,8 +44,8 @@ export interface AuthRequest {
 }
 
 export const defaultUser: User = {
-    customerId: Number(process.env.DEFAULT_USER_CUSTOMER_ID) || 1,
-    name: process.env.DEFAULT_USER_NAME || "John Doe",
-    role: process.env.DEFAULT_USER_ROLE || "Customer",
-    email: process.env.DEFAULT_USER_EMAIL || "john.doe@example.com",
+    customerId:  1,
+    name: "John Doe",
+    role: "Customer",
+    email: "john.doe@example.com",
 };
