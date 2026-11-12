@@ -4,35 +4,7 @@ A production-grade, responsive e-commerce web application built using **Next.js 
 
 ---
 
-## 🚀 Quickstart & Setup
 
-### Prerequisites
-- **Node.js**: `v18.18+` or `v20+`
-- **Package Manager**: `npm`
-
-### 1. Installation
-```bash
-npm install
-```
-
-### 2. Environment Variables
-Create a `.env` file in the project root:
-```env
-API_URL=https://training-ecom1-a9a2cmbsefdvgwha.centralindia-01.azurewebsites.net
-```
-> **Security Note:** `API_URL` is kept **server-only** (without `NEXT_PUBLIC_` prefix) to prevent leaking internal upstream API URLs or credentials to the browser bundle.
-
-### 3. Running Locally
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) to view the application.
-
-### 4. Production Build & Validation
-```bash
-npm run build
-npm run start
-```
 
 ---
 
