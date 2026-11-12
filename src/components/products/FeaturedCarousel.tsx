@@ -1,7 +1,13 @@
+import dynamic from "next/dynamic";
 import { productApiService } from "@/services/productApiServices";
 import { transformProducts } from "@/utils/dataTransformation";
+import { FeaturedCarouselSkeleton } from "./FeaturedCarouselSkeleton";
 import type { FeaturedCarouselProps, Product } from "@/types/product";
-import FeaturedCarouselClient from "./FeaturedCarouselClient";
+
+const FeaturedCarouselClient = dynamic(
+    () => import("./FeaturedCarouselClient"),
+    { loading: () => <FeaturedCarouselSkeleton /> }
+);
 
 export default async function FeaturedCarousel({ initialProducts }: FeaturedCarouselProps = {}) {
     let products: Product[] = initialProducts ?? [];

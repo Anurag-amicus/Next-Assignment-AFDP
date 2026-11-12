@@ -32,7 +32,7 @@ export function CheckoutSummary({
     isSubmitting = false,
 }: CheckoutSummaryProps) {
     const subtotal = calculateCartSubtotal(items);
-    const tax = +(subtotal * 0.08).toFixed(2);
+    const tax = +(subtotal * 0.18).toFixed(2);
     const total = +(subtotal + shippingCost + tax).toFixed(2);
 
     return (
@@ -98,7 +98,7 @@ export function CheckoutSummary({
                     </div>
 
                     <div className="flex justify-between items-center text-sm text-charcoal">
-                        <span>Tax (8%):</span>
+                        <span>Tax (18%):</span>
                         {loading ? (
                             <span className="h-4 w-14 bg-surface animate-pulse rounded-xs" />
                         ) : (

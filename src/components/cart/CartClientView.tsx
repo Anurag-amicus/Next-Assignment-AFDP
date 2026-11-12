@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import Cart from "./Cart";
 import OrderSummary from "./OrderSummary";
 import {
@@ -23,7 +23,7 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
     const [error, setError] = useState<string | null>(null);
     const [, startTransition] = useTransition();
 
-    const handleUpdateQuantity = (productId: number, quantity: number) => {
+    const handleUpdateQuantity = useCallback((productId: number, quantity: number) => {
         setActionLoadingId(productId);
         setError(null);
 
@@ -38,9 +38,9 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
                 toast.error(res.error || "Failed to update item quantity.");
             }
         });
-    };
+    }, [startTransition]);
 
-    const handleRemoveItem = (productId: number) => {
+    const handleRemoveItem = useCallback((productId: number) => {
         setActionLoadingId(productId);
         setError(null);
 
@@ -59,7 +59,9 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
                 toast.error(res.error || "Failed to remove item.");
             }
         });
-    };
+    }, [setCartCount, startTransition]);
+
+    const handleClearError = useCallback(() => setError(null), []);
 
     const handleClearCart = () => {
         setActionLoadingId(-1);
@@ -105,7 +107,7 @@ export default function CartClientView({ initialItems }: CartClientViewProps) {
                     <Cart
                         items={items}
                         error={error}
-                        onClearError={() => setError(null)}
+                        onClearError={handleClearError}
                         onUpdateQuantity={handleUpdateQuantity}
                         onRemove={handleRemoveItem}
                         actionLoadingId={actionLoadingId}
