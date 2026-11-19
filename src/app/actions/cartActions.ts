@@ -215,11 +215,12 @@ export async function clearCartAction(): Promise<CartActionResult> {
  * Fast lookup for cart item count (used by Header on initial page load / refresh).
  */
 export async function getCartCountAction(): Promise<number> {
-    const session = await getSession(); 
+    const session = await getSession();
     if (!session.isAuthenticated || !session.accessToken) {
         return 0;
     }
 
-    const res = await cartApiService.getCartCount(session.accessToken);
-    return res.success && typeof res.data === "number" ? res.data : 0;
+    // /cart/count returns total quantity, so derive the count from the items instead
+    const res = await cartApiService.getCart(session.accessToken);
+    return res.success ? calculateCartCount(res.data || []) : 0;
 }

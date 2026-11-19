@@ -22,7 +22,12 @@ export default function ReorderButton({ orderId }: { orderId: number }) {
 
     return (
         <form action={formAction}>
-            <Button type="submit" variant="primary" disabled={isPending} className="px-4 py-2 text-sm font-semibold">
+            <Button
+                type="submit"
+                variant="primary"
+                disabled={isPending}
+                className="w-auto h-8 px-4 text-xs font-bold uppercase tracking-wider"
+            >
                 {isPending ? "ADDING..." : "REORDER"}
             </Button>
         </form>

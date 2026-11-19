@@ -21,10 +21,13 @@ class CheckoutApiService {
         data: CheckoutRequest,
         { token, options }: AuthRequest,
     ): Promise<ApiResult<CheckoutResponse>> {
+        const headers = getAuthHeaders(token, options?.headers);
+        headers.set("Content-Type", "application/json");
+
         return apiRequest<CheckoutResponse>(`${this.baseUrl}/api/v1/checkout`, {
             ...options,
             method: "POST",
-            headers: getAuthHeaders(token, options?.headers),
+            headers,
             body: JSON.stringify(data),
         });
     }
@@ -33,10 +36,13 @@ class CheckoutApiService {
         data: MockPaymentRequest,
         { token, options }: AuthRequest,
     ): Promise<ApiResult<MockPaymentResponse>> {
+        const headers = getAuthHeaders(token, options?.headers);
+        headers.set("Content-Type", "application/json");
+
         return apiRequest<MockPaymentResponse>(`${this.baseUrl}/api/payments/mock`, {
             ...options,
             method: "POST",
-            headers: getAuthHeaders(token, options?.headers),
+            headers,
             body: JSON.stringify(data),
         });
     }

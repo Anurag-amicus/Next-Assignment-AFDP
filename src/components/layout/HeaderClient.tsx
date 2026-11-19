@@ -13,20 +13,18 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useCart } from "@/hooks/useCart";
-import { logoutAction } from "@/app/actions/authActions";
+import { logoutAction, getCurrentUserAction } from "@/app/actions/authActions";
 import { getCartCountAction } from "@/app/actions/cartActions";
 import HeaderUserMenu from "./HeaderUserMenu";
 import type { User } from "@/types/auth";
 
 export interface HeaderClientProps {
-    initialCartCount?: number;
     initialUser?: User | null;
     searchTerm?: string;
     onSearchChange?: (value: string) => void;
 }
 
 export default function HeaderClient({
-    initialCartCount = 0,
     initialUser = null,
     searchTerm,
     onSearchChange,
@@ -45,16 +43,40 @@ export default function HeaderClient({
     const { cartCount, setCartCount } = useCart();
 
     useEffect(() => {
-        if (typeof initialCartCount === "number" && initialCartCount > 0) {
-            setCartCount(initialCartCount);
-        }
-    }, [initialCartCount, setCartCount]);
+        let isMounted = true;
 
-    useEffect(() => {
-        getCartCountAction().then((count) => {
-            setCartCount(count);
-        });
-    }, [setCartCount]);
+        async function syncHeaderState() {
+            try {
+                const currentUser = await getCurrentUserAction();
+                if (isMounted) {
+                    setUser(currentUser);
+                }
+            } catch (err) {
+                console.error("HeaderClient: Error fetching user session:", err);
+                if (isMounted) {
+                    setUser(null);
+                }
+            }
+
+            try {
+                const currentCount = await getCartCountAction();
+                if (isMounted) {
+                    setCartCount(currentCount);
+                }
+            } catch (err) {
+                console.error("HeaderClient: Error fetching cart count:", err);
+                if (isMounted) {
+                    setCartCount(0);
+                }
+            }
+        }
+
+        syncHeaderState();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [pathname, setCartCount]);
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

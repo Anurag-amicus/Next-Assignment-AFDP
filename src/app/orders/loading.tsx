@@ -27,40 +27,63 @@ export default function OrdersLoading() {
                 <div className="h-8 w-24 bg-gray-100 rounded-xs" />
             </div>
 
-            {/* Orders List Skeleton (3 Cards) */}
+            {/* Orders List Skeleton (3 Cards matching React layout) */}
             <div className="flex flex-col gap-4">
                 {[1, 2, 3].map((key) => (
-                    <div
+                    <article
                         key={key}
-                        className="border border-surface rounded-lg p-6 bg-white shadow-xs flex flex-col gap-4"
+                        className="w-full bg-white border border-border rounded-xs shadow-xs overflow-hidden"
+                        aria-hidden="true"
                     >
-                        {/* Card Header: Order # + Date on left, Badge on right */}
-                        <div className="flex flex-wrap justify-between items-center gap-2 border-b border-surface pb-4">
-                            <div className="flex flex-col gap-2">
-                                <div className="h-4 w-28 bg-gray-200 rounded-xs" />
-                                <div className="h-3 w-20 bg-gray-100 rounded-xs" />
+                        {/* Header Placeholder */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-surface/50 border-b border-border">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+                                <div>
+                                    <div className="w-16 h-2.5 bg-gray-200 rounded-xs mb-1.5" />
+                                    <div className="w-20 h-4 bg-gray-300 rounded-xs" />
+                                </div>
+
+                                <div className="border-l border-border pl-3 sm:pl-6">
+                                    <div className="w-16 h-2.5 bg-gray-200 rounded-xs mb-1.5" />
+                                    <div className="w-24 h-3.5 bg-gray-200 rounded-xs" />
+                                </div>
+
+                                <div className="border-l border-border pl-3 sm:pl-6">
+                                    <div className="w-14 h-2.5 bg-gray-200 rounded-xs mb-1.5" />
+                                    <div className="w-16 h-3.5 bg-gray-200 rounded-xs" />
+                                </div>
                             </div>
-                            <div className="h-6 w-24 bg-gray-100 rounded-full" />
+
+                            <div className="w-20 h-6 bg-gray-200 rounded-full" />
                         </div>
 
-                        {/* Thumbnails Row */}
-                        <div className="flex gap-2 items-center py-2 overflow-x-auto">
-                            <div className="w-16 h-16 rounded bg-surface shrink-0" />
-                            <div className="w-16 h-16 rounded bg-surface shrink-0" />
-                            <div className="w-16 h-16 rounded bg-surface shrink-0 hidden sm:block" />
-                        </div>
+                        {/* Body Placeholder: Thumbnails & Amount */}
+                        <div className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex items-center gap-2.5 min-w-0 py-1">
+                                <div className="w-14 h-14 shrink-0 rounded-xs bg-gray-200 border border-border" />
+                                <div className="w-14 h-14 shrink-0 rounded-xs bg-gray-200 border border-border" />
+                                <div className="w-14 h-14 shrink-0 rounded-xs bg-gray-200 border border-border hidden sm:block" />
 
-                        {/* Card Footer: Total on left, Buttons on right */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                            <div className="h-4 w-36 bg-gray-200 rounded-xs" />
-                            <div className="flex gap-2">
-                                <div className="h-9 w-28 bg-gray-200 rounded" />
+                                <div className="ml-2 hidden md:flex flex-col gap-1.5">
+                                    <div className="w-36 h-3.5 bg-gray-200 rounded-xs" />
+                                    <div className="w-24 h-2.5 bg-gray-200 rounded-xs" />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:items-end justify-center gap-1.5 shrink-0">
+                                <div className="w-16 h-2.5 bg-gray-200 rounded-xs" />
+                                <div className="w-24 h-6 bg-gray-300 rounded-xs" />
                             </div>
                         </div>
-                    </div>
+
+                        {/* Actions Bar Placeholder */}
+                        <div className="px-4 py-3 bg-surface/30 border-t border-border flex items-center justify-between">
+                            <div className="w-24 h-3.5 bg-gray-200 rounded-xs" />
+                            <div className="w-20 h-8 bg-gray-200 rounded-xs" />
+                        </div>
+                    </article>
                 ))}
             </div>
         </div>
     );
 }
-

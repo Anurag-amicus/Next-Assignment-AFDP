@@ -2,8 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { authApiService } from "@/services/authApiService";
-import { createSession, deleteSession, getRefreshToken} from "@/lib/session";
-import type { AuthActionState } from "@/types/auth";
+import { createSession, deleteSession, getRefreshToken, getSession } from "@/lib/session";
+import { defaultUser } from "@/types/auth";
+import type { AuthActionState, User } from "@/types/auth";
 
 function getFormString(formData: FormData, key: string): string {
     const value = formData.get(key);
@@ -146,4 +147,12 @@ export async function logoutAction(): Promise<void> {
     }
 
     redirect("/login");
+}
+
+export async function getCurrentUserAction(): Promise<User | null> {
+    const session = await getSession();
+    if (session.isAuthenticated && session.accessToken) {
+        return defaultUser;
+    }
+    return null;
 }

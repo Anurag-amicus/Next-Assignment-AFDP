@@ -11,6 +11,9 @@ export async function apiRequest<T>(
         if (!headers.has("Accept")) {
             headers.set("Accept", "application/json");
         }
+        if (options?.body && !headers.has("Content-Type") && typeof options.body === "string") {
+            headers.set("Content-Type", "application/json");
+        }
 
         const response = await fetch(url, {
             ...options,

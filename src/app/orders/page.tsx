@@ -8,6 +8,7 @@ import OrderCard from "@/components/orders/OrderCard";
 import EmptyOrdersState from "@/components/orders/OrderEmptyState";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import type { Metadata } from "next";
+import type { OrderDetail } from "@/types/order";
 
 export const metadata: Metadata = {
     title: "My Orders",
@@ -34,7 +35,30 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
 
     const isError = !res.success;
     const errorMessage = !res.success ? (res.error ?? "Failed to load orders.") : null;
-    const orders = res.success ? (res.data?.orders ?? []) : [];
+    const rawOrders = res.success ? (res.data?.orders ?? []) : [];
+
+    // Parallel server-side hydration of complete order details
+    const orders: OrderDetail[] = await Promise.all(
+        rawOrders.map(async (rawOrder) => {
+            try {
+                const detailRes = await orderApiService.getOrderById(
+                    { token: session.accessToken! },
+                    rawOrder.orderId
+                );
+                if (detailRes.success && detailRes.data) {
+                    return {
+                        ...rawOrder,
+                        ...detailRes.data,
+                        items: detailRes.data.items ?? rawOrder.items ?? [],
+                    };
+                }
+            } catch (error) {
+                console.error(`Failed to load details for order #${rawOrder.orderId}:`, error);
+            }
+            return rawOrder;
+        })
+    );
+
     const totalRecords = res.success ? (res.data?.totalRecords ?? orders.length) : 0;
 
     return (

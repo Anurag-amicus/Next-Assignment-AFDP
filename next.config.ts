@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  experimental: {
+    agentUpgrade: "security",
+    turbopackPluginRuntimeStrategy: "forceWorkerThreads",
+  },
   images: {
     remotePatterns: [
       {
