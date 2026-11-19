@@ -35,6 +35,9 @@ export interface AuthActionState {
     error?: string | null;
     fieldErrors?: Record<string, string>;
     inputs?: Record<string, string>;
+    user?: User;
+    cartCount?: number;
+    returnUrl?: string;
 }
 
 

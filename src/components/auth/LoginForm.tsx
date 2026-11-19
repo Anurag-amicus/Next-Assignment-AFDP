@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useEffect, useActionState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import Button from "@/components/common/Button";
+import { useCart } from "@/hooks/useCart";
 import { loginAction } from "@/app/actions/authActions";
 import type { AuthActionState } from "@/types/auth";
 
@@ -14,12 +15,25 @@ const initialState: AuthActionState = {
 };
 
 export default function LoginForm() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const returnUrl = searchParams.get("returnUrl") || "";
     const isRegistered = searchParams.get("registered") === "true";
 
+    const { setUser, setCartCount } = useCart();
     const [state, formAction, isPending] = useActionState(loginAction, initialState);
     const [showPassword, setShowPassword] = useState(false);
+
+    useEffect(() => {
+        if (state.success && state.user) {
+            setUser(state.user);
+            if (typeof state.cartCount === "number") {
+                setCartCount(state.cartCount);
+            }
+            const destination = state.returnUrl || (returnUrl && returnUrl.startsWith("/") && !returnUrl.startsWith("//") ? returnUrl : "/");
+            router.push(destination);
+        }
+    }, [state, returnUrl, router, setUser, setCartCount]);
 
     return (
         <div className="w-full max-w-120 bg-white px-8 py-10 sm:px-12 sm:py-12 border border-border shadow-xs rounded-xs">

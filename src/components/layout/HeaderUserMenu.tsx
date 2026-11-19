@@ -9,9 +9,10 @@ import type { User } from "@/types/auth";
 interface HeaderUserMenuProps {
     user: User | null;
     onLogout: () => void;
+    isLoading?: boolean;
 }
 
-export default function HeaderUserMenu({ user, onLogout }: HeaderUserMenuProps) {
+export default function HeaderUserMenu({ user, onLogout, isLoading }: HeaderUserMenuProps) {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +30,15 @@ export default function HeaderUserMenu({ user, onLogout }: HeaderUserMenuProps) 
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [open]);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center gap-2 animate-pulse" aria-hidden="true">
+                <div className="h-8 w-8 rounded-full bg-gray-200 shrink-0" />
+                <div className="h-3.5 w-14 bg-gray-200 rounded-xs max-[900px]:hidden" />
+            </div>
+        );
+    }
 
     if (!user) {
         return (

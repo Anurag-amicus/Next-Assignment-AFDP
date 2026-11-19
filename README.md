@@ -44,6 +44,7 @@ A production-grade, responsive e-commerce web application built using **Next.js 
 | `src/components/products/AddToCartSection.tsx` | **Client** | Isolates interactive quantity selection, Add to Cart event, and success toast. |
 | `src/components/products/FeaturedCarousel.tsx` | **Client** | Controls touch events, sliding navigation, and DOM events via Swiper. |
 | `src/components/layout/Header.tsx` | **Client** | Reads pathname for active route indicators, manages search input, and controls mobile drawer state. |
+| `src/components/orders/StatusBadge.tsx` | **Client / Shared** | Order status badge with color-coordinated indicator dot and status pill (Processing, Shipped, Delivered, Cancelled). |
 | `src/components/layout/HeaderUserMenu.tsx` | **Client** | Handles profile toggle, user initials badge, click-outside dropdown, and logout trigger. |
 | `src/components/auth/LoginForm.tsx` | **Client** | Manages login form submission via `useActionState`, return URL pass-through, and eye-icon password toggle. |
 | `src/components/auth/RegisterForm.tsx` | **Client** | Manages registration via `useActionState`, field validation, and eye-icon password toggles. |
@@ -372,7 +373,7 @@ Because all state lives in the URL query string:
 Running `npm run build` compiles with zero TypeScript, routing, or linting errors:
 
 ```text
-▲ Next.js 16.4.2 (Turbopack)
+▲ Next.js 16.4.6 (Turbopack)
 - Environments: .env
 ✓ Running next.config.ts took 66ms
 
@@ -385,22 +386,23 @@ Running `npm run build` compiles with zero TypeScript, routing, or linting error
 ✓ Generating static pages using 7 workers (31/31) in 2.2s
   Finalizing page optimization ...
 
-Route (app)
-┌ ƒ /
-├ ƒ /_not-found
-├ ƒ /about
+Route (app)             Revalidate  Expire
+┌ ○ /                           1m      1y
+├ ○ /_not-found
+├ ○ /about
 ├ ƒ /api/products
 ├ ƒ /api/products/[id]
-├ ƒ /checkout
-├ ƒ /dashboard
-├ ƒ /login
-├ ƒ /orders
+├ ○ /login
 ├ ƒ /products
-├ ƒ /products/[id]
-└ ƒ /register
+├   /products/[id]
+│ ├ ● /products/1               1m      1y
+│ ├ ● /products/2               1m      1y
+│ ├ ● /products/3               1m      1y
+│ └ ● [+17 more paths]
+└ ○ /register
 
-ƒ Proxy (Middleware)
-
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
 ƒ  (Dynamic)  server-rendered on demand
 ```
 
@@ -782,7 +784,7 @@ To ensure that the dashboard never triggers horizontal scrolling on any device (
    - Validates shipping payload via `shippingSchema` (when creating a new address).
    - Re-checks cart non-empty status on the server.
    - Creates new address record if required (`addressApiService.createAddress`).
-   - Executes checkout transaction (`checkoutApiService.checkout`) and authorizes mock payment (`checkoutApiService.mockPayment`).
+   - Executes checkout transaction (`checkoutApiService.checkout`) and authorizes mock payment (`checkoutApiService.mockPayment`). Both endpoints explicitly transmit `Content-Type: application/json` headers (with global fallback in `apiClient.ts`), preventing HTTP 415 (*Unsupported Media Type*) rejections.
    - Clears cart via `cartApiService.clearCart` and triggers cache revalidation (`revalidatePath` for `/cart`, `/orders`, and `/dashboard`).
 
 ---
@@ -792,13 +794,19 @@ To ensure that the dashboard never triggers horizontal scrolling on any device (
 ### Objectives
 - Build a protected `/orders` page using an async Server Component with server-side authentication guards.
 - Integrate `orderApiService.getOrderHistory` with real-time status filtering (`All`, `Placed`, `Processing`, `Shipped`, `Delivered`, `Cancelled`).
-- Implement lazy-loaded order details via Server Action `getOrderDetailsAction(orderId)` using an interactive accordion.
+- Hydrate order line items in parallel server-side via `Promise.all` calling `orderApiService.getOrderById`, sorting newest first, with clean per-order error fallback to prevent initial "0 items" display.
+- Align with the React project's 3-part card layout: metadata header columns (Order #, Date, Items), `StatusBadge` with colored indicator dot, framed thumbnails with quantity badges, "+more" indicator, title summary, bold orange total, and actions bar (`▲ HIDE DETAILS` / `▼ VIEW DETAILS` and `REORDER`).
 - Handle empty states gracefully with status-aware messaging and a direct catalog CTA.
+- Mirror the card layout in `loading.tsx` skeletons for seamless streaming transitions.
 
 ### ⚙️ Key Implementation Highlights
-1. **Server Component Architecture (`src/app/orders/page.tsx`)**: Validates session via `getSession()` and fetches order history directly with `normalizeOrderStatus(status)`.
-2. **Interactive Order Accordion (`src/components/orders/OrderCard.tsx`, `OrderDetailsAccordion.tsx`)**: Client component managing expand/collapse states; lazy-loads granular line items, pricing breakdowns, and shipping address on demand via Server Action.
-3. **Filter Navigation & Empty State (`src/components/orders/OrderFilterTabs.tsx`, `OrderEmptyState.tsx`)**: Synchronizes active tab via URL search parameters (`?status=...`) and renders dedicated empty states when no orders match.
+1. **Server Component Detail Hydration (`src/app/orders/page.tsx`)**: Validates session via `getSession()`, fetches order history with `normalizeOrderStatus(status)`, and resolves detailed line items in parallel on the server using `Promise.all` with `orderApiService.getOrderById`. Sorts newest first and provides clean error logging in the `catch` block while falling back to summary orders.
+2. **Card Design (`src/components/orders/OrderCard.tsx`, `StatusBadge.tsx`)**:
+   - **Header Bar**: 3 metadata columns (`ORDER NUMBER`, `DATE PLACED`, `TOTAL ITEMS`) divided by borders, paired with `<StatusBadge>` featuring an inner colored dot and status-specific pill styling (Processing, Shipped, Delivered, Cancelled).
+   - **Card Body**: Framed product thumbnails (`w-14 h-14 rounded-xs border`) with round dark quantity overlays, `+X more` dashed box for >4 items, product title preview, and prominent orange total.
+   - **Action Bar & Accordion**: Toggle button `▲ HIDE DETAILS` / `▼ VIEW DETAILS` instantly opens `<OrderDetailsAccordion>` with zero delay since data is pre-hydrated on the server. Includes primary `REORDER` button for delivered orders.
+3. **Skeleton Loading Parity (`src/app/orders/loading.tsx`)**: Updated skeleton cards to mirror the 3-section structure for seamless layout stability during route transitions.
+4. **Filter Navigation & Empty State (`src/components/orders/OrderFilterTabs.tsx`, `OrderEmptyState.tsx`)**: Synchronizes active tab via URL search parameters (`?status=...`) and renders dedicated empty states when no orders match.
 
 ---
 
@@ -1130,7 +1138,8 @@ src/
 ### Assignment 12: Order Listing Page
 - [x] **Protected orders route**: Accessible at `/orders` with server session authentication guard and proxy protection.
 - [x] **Order history with status filter**: Interactive filter tabs (`All`, `Placed`, `Processing`, `Shipped`, `Delivered`, `Cancelled`) synced to URL search parameters.
-- [x] **Expandable order details**: Order card accordion with lazy-loaded itemized order details, shipping information, and pricing breakdown.
+- [x] **Server-side detail hydration**: Parallel detail resolution on the server using `Promise.all` with `getOrderById`, and styled matching the React project's 3-section card layout (`StatusBadge` with dot, framed thumbnails, quantity overlays, bold orange total, and actions bar).
+- [x] **Expandable order details**: Order card accordion with instant toggle to itemized order details, shipping information, and pricing breakdown.
 - [x] **Empty order states**: Contextual empty states with direct call-to-action to browse the catalog.
 
 ### Assignment 13: Error Handling & Skeletons
@@ -1145,9 +1154,9 @@ src/
 - [x] **Dynamic and static SEO metadata**: Dynamic `generateMetadata` for `/products/[id]` and `/products`; static `metadata` exports with title templates for all static pages.
 
 ### Assignment 15: Testing (Jest + React Testing Library)
-- [x] **10+ passing tests**: 17 tests passing cleanly across 5 dedicated test suites.
-- [x] **Component and user interaction tests**: Ported and enhanced `ProductCard` and `Cart` tests using accessible queries (`getByRole`, `getByText`).
-- [x] **Server Action and Route Handler tests**: Verified `cartActions` and `/api/products` endpoints with mocked dependencies and zero backend downtime impact.
+- [x] **10+ passing tests**: 27 tests passing cleanly across 7 dedicated test suites.
+- [x] **Component and user interaction tests**: Ported and enhanced `ProductCard`, `Cart`, and `HeaderUserMenu` (including authentication state and loading skeletons) tests using accessible queries (`getByRole`, `getByText`).
+- [x] **Server Action and Route Handler tests**: Verified `cartActions`, `authActions`, and `/api/products` endpoints with mocked dependencies and zero backend downtime impact.
 - [x] **Validation tests**: Tested valid and invalid cases for shipping and cart schemas.
 - [x] **Coverage report**: Automated V8 coverage report generated via `npm run test:coverage`.
 

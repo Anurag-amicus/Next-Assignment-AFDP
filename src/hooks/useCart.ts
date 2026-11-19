@@ -9,6 +9,9 @@ export function useCart() {
         return {
             cartCount: 0,
             setCartCount: () => {},
+            user: null,
+            setUser: () => {},
+            isLoading: false,
         };
     }
     return context;

@@ -1,3 +1,5 @@
+import type { User } from "./auth";
+
 export interface CartItem {
     cartItemId: number;
     productId: number;
@@ -26,4 +28,7 @@ export interface CartActionResult {
 export interface CartContextType {
     cartCount: number;
     setCartCount: (count: number) => void;
+    user: User | null;
+    setUser: (user: User | null) => void;
+    isLoading: boolean;
 }

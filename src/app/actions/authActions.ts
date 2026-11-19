@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { authApiService } from "@/services/authApiService";
 import { createSession, deleteSession, getRefreshToken, getSession } from "@/lib/session";
+import { getCartCountAction } from "@/app/actions/cartActions";
 import { defaultUser } from "@/types/auth";
 import type { AuthActionState, User } from "@/types/auth";
 
@@ -26,7 +27,7 @@ export async function loginAction(
     const email = getFormString(formData, "email").trim();
     const password = getFormString(formData, "password");
     const rawReturnUrl = getFormString(formData, "returnUrl");
-    const targetUrl = sanitizeReturnUrl(rawReturnUrl);
+    const returnUrl = sanitizeReturnUrl(rawReturnUrl);
 
     const fieldErrors: Record<string, string> = {};
 
@@ -45,6 +46,7 @@ export async function loginAction(
             success: false,
             fieldErrors,
             inputs: { email },
+            returnUrl,
         };
     }
 
@@ -56,19 +58,28 @@ export async function loginAction(
                 success: false,
                 error: result.error || "Invalid credentials. Please try again.",
                 inputs: { email },
+                returnUrl,
             };
         }
 
         await createSession(result.data.token, result.data.refreshToken);
+
+        const cartCount = await getCartCountAction();
+
+        return {
+            success: true,
+            user: defaultUser,
+            cartCount,
+            returnUrl,
+        };
     } catch {
         return {
             success: false,
             error: "Unable to complete login. Please try again.",
             inputs: { email },
+            returnUrl,
         };
     }
-
-    redirect(targetUrl);
 }
 
 export async function registerAction(
@@ -155,4 +166,34 @@ export async function getCurrentUserAction(): Promise<User | null> {
         return defaultUser;
     }
     return null;
+}
+
+export async function getHeaderStateAction(): Promise<{ user: User | null; cartCount: number }> {
+    try {
+        let session = await getSession();
+
+        if (!session.isAuthenticated || !session.accessToken) {
+            const refreshToken = await getRefreshToken();
+            if (!refreshToken) {
+                return { user: null, cartCount: 0 };
+            }
+
+            const refreshResult = await authApiService.refreshToken({ refreshToken });
+            if (refreshResult.success && refreshResult.data) {
+                await createSession(refreshResult.data.token, refreshResult.data.refreshToken);
+                session = {
+                    accessToken: refreshResult.data.token,
+                    isAuthenticated: true,
+                };
+            } else {
+                await deleteSession();
+                return { user: null, cartCount: 0 };
+            }
+        }
+
+        const cartCount = await getCartCountAction();
+        return { user: defaultUser, cartCount };
+    } catch {
+        return { user: null, cartCount: 0 };
+    }
 }

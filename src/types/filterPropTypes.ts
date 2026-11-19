@@ -29,12 +29,6 @@ export type RatingFilterProps = {
     onChange: (rating: number | null) => void;
 };
 
-export type HeaderProps = {
-    searchTerm?: string;
-    onSearchChange?: (value: string) => void;
-    cartCount?: number;
-};
-
 export interface PriceRange {
     min: number;
     max: number | null;
